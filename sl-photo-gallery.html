@@ -1,0 +1,206 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../app-layout/app-grid/app-grid-style.html">
+<link rel="import" href="../app-route/app-location.html">
+<link rel="import" href="../app-route/app-route.html">
+<link rel="import" href="sl-photo-gallery-slideshow.html">
+
+<dom-module id="sl-photo-gallery">
+  <template>
+    <style include="app-grid-style">
+      :host {
+        display: block;
+        overflow: hidden;
+
+        --app-grid-columns: 4;
+        --app-grid-gutter: 8px;
+        --app-grid-item-height: 75%;
+        --app-grid-expandible-item-columns: 2;
+      }
+
+      #imageGrid {
+        padding: 0;
+        margin: 0 -8px -8px 0; /* hide gutter around grid */
+        list-style: none;
+      }
+
+      .image {
+        cursor: pointer;
+        /* Placeholder bg color */
+        background-color: rgba(0, 0, 0, 0.0);
+        background-size: cover;
+        background-position: center center;
+      }
+
+      @media (max-width: 840px) {
+        :host {
+          --app-grid-columns: 2;
+          --app-grid-gutter: 4px;
+        }
+
+        #imageGrid {
+          margin: 0 -4px -4px 0; /* hide gutter around grid */
+        }
+
+        .image:nth-child(3n + 3) {
+          @apply --app-grid-expandible-item;
+          --app-grid-item-height: 38%;
+        }
+      }
+
+      @media (min-width: 841px) {
+        .image:nth-child(6n + 5),
+        .image:nth-child(6n + 6) {
+          @apply --app-grid-expandible-item;
+          --app-grid-item-height: 38%;
+        }
+      }
+    </style>
+
+    <app-location route="{{route}}" use-hash-as-path></app-location>
+
+    <app-route
+        route="{{route}}"
+        pattern="/i/:id"
+        data="{{imageRouteData}}"
+        active="{{imageRouteActive}}"></app-route>
+
+    <!-- [TODO]: Consider changing ul/li to div/div or div/span -->
+    <ul id="imageGrid" class="app-grid" has-aspect-ratio>
+      <dom-repeat items="[[images]]" as="image" hidden>
+        <template>
+          <li class="image" image-id="[[image.id]]" style$="[[_getImageStyle(image)]]"></li>
+        </template>
+      </dom-repeat>
+    </ul>
+  </template>
+
+  <script>
+    class SLPhotoGallery extends Polymer.Element {
+
+      static get is() { return 'sl-photo-gallery'; }
+
+      static get properties() {
+        return {
+          active: {
+            type: Boolean,
+            value: true,
+          },
+          images: {
+            type: Array,
+            value: function() {
+              return [];
+            },
+            observer: '_imagesChanged',
+          },
+          route: Object,
+          imageRouteData: Object,
+          imageRouteActive: Boolean,
+        };
+      }
+
+      static get observers() {
+        return [
+          '_imageRouteActiveChanged(imageRouteActive)',
+          '_imageRouteIdChanged(imageRouteData.id)',
+        ];
+      }
+
+      constructor() {
+        super();
+
+        // Create slideshow element, keep handle as this.slideshow
+        this.slideshow = document.createElement('sl-photo-gallery-slideshow');
+
+        // Create reference to local scope in slideshow
+        this.slideshow.gallery = this;
+
+        // Hide slideshow before appending to prevent potential flash of content
+        this.slideshow.hidden = true;
+
+        // Append slideshow to root custom-element
+        document.body.appendChild(this.slideshow);
+
+        // Bind class functions used as handlers
+        this._expandImage = this._expandImage.bind(this);
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+
+        // Create listener on image-grid to open slideshow
+        this.$.imageGrid.addEventListener('click', this._expandImage);
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+
+        // Remove listener on image-grid
+        this.$.imageGrid.removeEventListener('click', this._expandImage);
+      }
+
+      _imagesChanged(images) {
+        console.log('_imagesChanged');
+
+        // Give each image an id based on position in array
+        this.images.forEach((image, i) => {
+          image.id = i;
+          image.hasCaption = Boolean(image.caption);
+        });
+      }
+
+      _getImageStyle(image) {
+        let src;
+        if (image.small) {
+          src = image.small;
+        } else {
+          src = image.src;
+        }
+        return `background-image: url(${src});`;
+      }
+
+      _expandImage(event) {
+        if (event.target.imageId !== undefined) {
+          window.location.hash = `/i/${event.target.imageId}`;
+        }
+      }
+
+      _imageRouteActiveChanged(active) {
+        console.log('_imageRouteActiveChanged');
+
+        if (active && this.active) {
+          console.log('_imageRouteActiveChanged -> showing gallery');
+          this.slideshow.toolbarVisible = true;
+          this.slideshow.hidden = false;
+          this.slideshow.focus();
+        } else {
+          console.log('_imageRouteActiveChanged -> hiding gallery');
+          console.log('_imageRouteActiveChanged -> this.active:', this.active);
+          console.log('_imageRouteActiveChanged -> active:', active);
+          this.slideshow.hidden = true;
+        }
+      }
+
+      _imageRouteIdChanged(id) {
+        console.log('_imageRouteIdChanged');
+        if (this.imageRouteActive) {
+          console.log('_imageRouteIdChanged setting activeImage:', this.images[id]);
+          this.slideshow.activeImage = this.images[id];
+        } else {
+          this.slideshow.activeImage = undefined;
+        }
+      }
+
+      _resetImageRoute() {
+        console.log('closing slideshow');
+
+        window.location.hash = '';
+        this.imageRouteData = {};
+
+        console.log('closed slideshow');
+      }
+
+    }
+
+    window.customElements.define(SLPhotoGallery.is, SLPhotoGallery);
+  </script>
+</dom-module>

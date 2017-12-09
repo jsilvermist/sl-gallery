@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>sl-photo-gallery test</title>
+
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+
+    <link rel="import" href="../sl-photo-gallery.html">
+  </head>
+  <body>
+
+    <test-fixture id="BasicTestFixture">
+      <template>
+        <sl-photo-gallery></sl-photo-gallery>
+      </template>
+    </test-fixture>
+
+    <test-fixture id="ImagesStringTestFixture">
+      <template>
+        <sl-photo-gallery images='[{
+          "src": "https://unsplash.it/800/500/?image=257",
+          "small": "https://unsplash.it/400/250/?image=257",
+          "title": "Example Title 01",
+          "caption": "This in an example caption!"
+        }]'></sl-photo-gallery>
+      </template>
+    </test-fixture>
+
+    <script>
+      suite('sl-photo-gallery', () => {
+
+        test('slideshow hidden on load', () => {
+          const gallery = fixture('BasicTestFixture');
+          assert.isTrue(gallery.slideshow.hidden);
+        });
+
+        test('images is an array with an object', () => {
+          const gallery = fixture('ImagesStringTestFixture');
+          assert.isArray(gallery.images, 'gallery.images is an array');
+          assert.isObject(gallery.images[0], 'gallery.images contains an object');
+        });
+
+      });
+    </script>
+
+  </body>
+</html>
