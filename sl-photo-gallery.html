@@ -169,6 +169,7 @@
 
         if (active && this.active) {
           console.log('_imageRouteActiveChanged -> showing gallery');
+          document.body.style.overflow = 'hidden';
           this.slideshow.toolbarVisible = true;
           this.slideshow.hidden = false;
           this.slideshow.focus();
@@ -176,6 +177,7 @@
           console.log('_imageRouteActiveChanged -> hiding gallery');
           console.log('_imageRouteActiveChanged -> this.active:', this.active);
           console.log('_imageRouteActiveChanged -> active:', active);
+          document.body.style.overflow = '';
           this.slideshow.hidden = true;
         }
       }
