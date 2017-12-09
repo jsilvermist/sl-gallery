@@ -193,7 +193,9 @@
       _resetImageRoute() {
         console.log('closing slideshow');
 
-        window.location.hash = '';
+        history.pushState({}, document.title, window.location.pathname + window.location.search);
+        window.dispatchEvent(new CustomEvent('location-changed'));
+
         this.imageRouteData = {};
 
         console.log('closed slideshow');
