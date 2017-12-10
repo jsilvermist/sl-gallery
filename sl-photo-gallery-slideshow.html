@@ -254,7 +254,7 @@
 
       static get observers() {
         return [
-          '_activeImageIdChanged(activeImage.id)',
+          '_activeImageIndexChanged(activeImage.index)',
           '_imageLoadedChanged(imageLoaded)',
           '_imageErrorChanged(imageError)',
         ];
@@ -325,31 +325,31 @@
       }
 
       get hasPreviousImage() {
-        return +this.activeImage.id > 0;
+        return +this.activeImage.index > 0;
       }
 
       get hasNextImage() {
-        return +this.activeImage.id < (this.gallery.images.length-1);
+        return +this.activeImage.index < (this.gallery.images.length-1);
       }
 
-      _activeImageIdChanged(id) {
+      _activeImageIndexChanged(index) {
         const images = this.gallery.images;
-        console.log('_activeImageIdChanged, id:', id);
+        console.log('_activeImageIndexChanged, index:', index);
 
-        // Exit if gallery not active, no images in gallery, or id is undefined
-        if (!this.gallery.active || !this.gallery.imageRouteActive || !images || id === undefined) {
-          console.log('slideshow._activeImageIdChanged exiting');
+        // Exit if gallery not active, no images in gallery, or index is undefined
+        if (!this.gallery.active || !this.gallery.imageRouteActive || !images || index === undefined) {
+          console.log('slideshow._activeImageIndexChanged exiting');
           return;
         }
 
-        // If no valid image id set, reset image and close slideshow
-        if (id === '' || isNaN(id) || id < 0 || id >= images.length) {
-          console.log('resetting slideshow not valid imageId:', id);
-          this.gallery._closeSlideshow();
+        // If no valid image index set, reset image and close slideshow
+        if (index === '' || isNaN(index) || index < 0 || index >= images.length) {
+          console.log('resetting slideshow not valid imageId:', index);
+          this._closeSlideshow();
           return;
         }
 
-        console.log('slideshow.activeImage.id:', id);
+        console.log('slideshow.activeImage.index:', index);
 
         // Load the image in iron-image
         this.imageSmall = this.activeImage.small;
@@ -399,12 +399,12 @@
 
           // Preload previous image if not loaded
           if (this.hasPreviousImage) {
-            this._preloadImage(images[+this.activeImage.id-1]);
+            this._preloadImage(images[+this.activeImage.index-1]);
           }
 
           // Preload next image if not loaded
           if (this.hasNextImage) {
-            this._preloadImage(images[+this.activeImage.id+1]);
+            this._preloadImage(images[+this.activeImage.index+1]);
           }
 
         }
@@ -419,13 +419,13 @@
 
       _previousImage() {
         if (this.hasPreviousImage) {
-          window.location.hash = `/i/${+this.activeImage.id-1}`
+          window.location.hash = `/i/${+this.activeImage.index-1}`
         }
       }
 
       _nextImage() {
         if (this.hasNextImage) {
-          window.location.hash = `/i/${+this.activeImage.id+1}`
+          window.location.hash = `/i/${+this.activeImage.index+1}`
         }
       }
 
@@ -476,6 +476,18 @@
           parrent.removeChild(el);
           setTimeout(() => parrent.insertBefore(el, sibling), 0);
         }
+      }
+
+      show() {
+        document.body.style.overflow = 'hidden';
+        this.toolbarVisible = true;
+        this.hidden = false;
+        this.focus();
+      }
+
+      hide() {
+        document.body.style.overflow = '';
+        this.hidden = true;
       }
     }
 

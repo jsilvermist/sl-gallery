@@ -25,12 +25,53 @@
       <h3>Basic sl-photo-gallery demo</h3>
       <demo-snippet>
         <template>
-          <sl-photo-gallery id="gallery"></sl-photo-gallery>
+          <style>
+            @media (max-width: 840px) {
+              sl-photo-gallery {
+                --app-grid-columns: 2;
+                --app-grid-gutter: 4px;
+              }
+
+              sl-photo-gallery-image:nth-child(3n + 3) {
+                @apply --app-grid-expandible-item;
+                --app-grid-item-height: 38%;
+              }
+            }
+
+            @media (min-width: 841px) {
+              sl-photo-gallery-image:nth-child(6n + 5),
+              sl-photo-gallery-image:nth-child(6n + 6) {
+                @apply --app-grid-expandible-item;
+                --app-grid-item-height: 38%;
+              }
+            }
+          </style>
+          <sl-photo-gallery id="gallery">
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=257"
+                small="https://unsplash.it/400/250/?image=257"
+                title="Example Title 01">
+            </sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=250"
+                small="https://unsplash.it/400/250/?image=250"
+                title="Another Title 02">
+            </sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=399"
+                small="https://unsplash.it/400/250/?image=399"
+                title="Photo Title 03"
+                caption="Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+                  Necessitatibus tempora ea eius placeat.
+                  Sed culpa numquam voluptatibus possimus, eaque vel!">
+            </sl-photo-gallery-image>
+            <sl-photo-gallery-image src="https://unsplash.it/800/500/?image=250"></sl-photo-gallery-image>
+          </sl-photo-gallery>
           <script>
             fetch('images.json')
               .then(data => data.json())
               .then(images => {
-                document.querySelector('#gallery').images = images;
+                // document.querySelector('#gallery').images = images;
               });
           </script>
         </template>

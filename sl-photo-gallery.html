@@ -1,12 +1,12 @@
 <link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../app-layout/app-grid/app-grid-style.html">
 <link rel="import" href="../app-route/app-location.html">
 <link rel="import" href="../app-route/app-route.html">
+<link rel="import" href="sl-photo-gallery-image.html">
 <link rel="import" href="sl-photo-gallery-slideshow.html">
 
 <dom-module id="sl-photo-gallery">
   <template>
-    <style include="app-grid-style">
+    <style>
       :host {
         display: block;
         overflow: hidden;
@@ -15,42 +15,37 @@
         --app-grid-gutter: 8px;
         --app-grid-item-height: 75%;
         --app-grid-expandible-item-columns: 2;
+
+        --app-grid-expandible-item: {
+          -webkit-flex-basis: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns, 1) - var(--app-grid-gutter, 0px)) !important;
+          flex-basis: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns, 1) - var(--app-grid-gutter, 0px)) !important;
+          max-width: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns, 1) - var(--app-grid-gutter, 0px)) !important;
+        };
       }
 
       #imageGrid {
-        padding: 0;
+        display: -ms-flexbox;
+        display: -webkit-flex;
+        display: flex;
+
+        -ms-flex-direction: row;
+        -webkit-flex-direction: row;
+        flex-direction: row;
+
+        -ms-flex-wrap: wrap;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+
+        padding-top: var(--app-grid-gutter, 0px);
+        padding-left: var(--app-grid-gutter, 0px);
+        box-sizing: border-box;
+
+        /* Hide ul style */
         list-style: none;
 
-        /* hide gutter around grid */
-        margin: 0 calc(-1 * var(--app-grid-gutter)) calc(-1 * var(--app-grid-gutter)) 0;
-      }
-
-      .image {
-        cursor: pointer;
-        /* Placeholder bg color */
-        background-color: rgba(0, 0, 0, 0.0);
-        background-size: cover;
-        background-position: center center;
-      }
-
-      @media (max-width: 840px) {
-        :host {
-          --app-grid-columns: 2;
-          --app-grid-gutter: 4px;
-        }
-
-        .image:nth-child(3n + 3) {
-          @apply --app-grid-expandible-item;
-          --app-grid-item-height: 38%;
-        }
-      }
-
-      @media (min-width: 841px) {
-        .image:nth-child(6n + 5),
-        .image:nth-child(6n + 6) {
-          @apply --app-grid-expandible-item;
-          --app-grid-item-height: 38%;
-        }
+        /* Hide gutter around grid */
+        padding: 0;
+        margin: 0 calc(-1 * var(--app-grid-gutter, 0px)) calc(-1 * var(--app-grid-gutter, 0px)) 0;
       }
     </style>
 
@@ -58,17 +53,13 @@
 
     <app-route
         route="{{route}}"
-        pattern="/i/:id"
+        pattern="/i/:index"
         data="{{imageRouteData}}"
         active="{{imageRouteActive}}"></app-route>
 
-    <!-- [TODO]: Consider changing ul/li to div/div or div/span -->
-    <ul id="imageGrid" class="app-grid" has-aspect-ratio>
-      <dom-repeat items="[[images]]" as="image" hidden>
-        <template>
-          <li class="image" image-id="[[image.id]]" style$="[[_getImageStyle(image)]]"></li>
-        </template>
-      </dom-repeat>
+    <!-- [TODO]: Consider removing or changing ul/li to div/div or div/span -->
+    <ul id="imageGrid">
+      <slot></slot>
     </ul>
   </template>
 
@@ -99,7 +90,7 @@
       static get observers() {
         return [
           '_imageRouteActiveChanged(imageRouteActive)',
-          '_imageRouteIdChanged(imageRouteData.id)',
+          '_imageRouteIndexChanged(imageRouteData.index)',
         ];
       }
 
@@ -125,40 +116,39 @@
       connectedCallback() {
         super.connectedCallback();
 
+        this._observer = new Polymer.FlattenedNodesObserver(this, (info) => {
+          this.images = [...info.target.children];
+        });
+
         // Create listener on image-grid to open slideshow
         this.$.imageGrid.addEventListener('click', this._expandImage);
+        this.addEventListener('click', this._expandImage);
       }
 
       disconnectedCallback() {
         super.disconnectedCallback();
+
+        this._observer.disconnect();
 
         // Remove listener on image-grid
         this.$.imageGrid.removeEventListener('click', this._expandImage);
       }
 
       _imagesChanged(images) {
-        console.log('_imagesChanged');
+        console.log('_imagesChanged', images);
 
-        // Give each image an id based on position in array
+        // Give each image an index based on position in array
         this.images.forEach((image, i) => {
-          image.id = i;
+          image.index = i;
           image.hasCaption = Boolean(image.caption);
         });
-      }
 
-      _getImageStyle(image) {
-        let src;
-        if (image.small) {
-          src = image.small;
-        } else {
-          src = image.src;
-        }
-        return `background-image: url(${src});`;
+        this._imageRouteIndexChanged(this.imageRouteData.index);
       }
 
       _expandImage(event) {
-        if (event.target.imageId !== undefined) {
-          window.location.hash = `/i/${event.target.imageId}`;
+        if (event.target.index !== undefined) {
+          window.location.hash = `/i/${event.target.index}`;
         }
       }
 
@@ -167,24 +157,26 @@
 
         if (active && this.active) {
           console.log('_imageRouteActiveChanged -> showing gallery');
-          document.body.style.overflow = 'hidden';
-          this.slideshow.toolbarVisible = true;
-          this.slideshow.hidden = false;
-          this.slideshow.focus();
+          this.slideshow.show();
         } else {
           console.log('_imageRouteActiveChanged -> hiding gallery');
           console.log('_imageRouteActiveChanged -> this.active:', this.active);
           console.log('_imageRouteActiveChanged -> active:', active);
-          document.body.style.overflow = '';
-          this.slideshow.hidden = true;
+          this.slideshow.hide();
         }
       }
 
-      _imageRouteIdChanged(id) {
-        console.log('_imageRouteIdChanged');
+      _imageRouteIndexChanged(index) {
+        console.log('_imageRouteIndexChanged');
+
+        if (!this.images) {
+          console.log('_imageRouteIndexChanged, images empty, returning');
+          return;
+        }
+
         if (this.imageRouteActive) {
-          console.log('_imageRouteIdChanged setting activeImage:', this.images[id]);
-          this.slideshow.activeImage = this.images[id];
+          console.log('_imageRouteIndexChanged setting activeImage:', this.images[index]);
+          this.slideshow.activeImage = this.images[index];
         } else {
           this.slideshow.activeImage = undefined;
         }
