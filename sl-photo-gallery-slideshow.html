@@ -200,7 +200,7 @@
       }
     </style>
 
-    <div id="overlay" toolbar-visible$="[[toolbarVisible]]" hover-enabled$="[[!isTouch]]">
+    <div id="overlay" toolbar-visible$="[[_toolbarVisible]]" hover-enabled$="[[!_isTouch]]">
       <app-toolbar class="header">
         <div main-title>[[activeImage.title]]</div>
         <paper-icon-button id="toggleFullscreen" icon="sl-photo-gallery:fullscreen"></paper-icon-button>
@@ -220,11 +220,11 @@
       </div>
     </div>
 
-    <paper-spinner-lite active="[[spinnerActive]]" hidden="[[!spinnerActive]]"></paper-spinner-lite>
+    <paper-spinner-lite active="[[_spinnerActive]]" hidden="[[!_spinnerActive]]"></paper-spinner-lite>
 
     <div class="image-container">
-      <iron-image id="image" src="[[imageSrc]]" alt="" preload fade sizing="contain"
-          placeholder="[[imageSmall]]" loaded="{{imageLoaded}}" error="{{imageError}}"></iron-image>
+      <iron-image id="image" src="[[_imageSrc]]" alt="" preload fade sizing="contain"
+          placeholder="[[_imageSmall]]" loaded="{{_imageLoaded}}" error="{{_imageError}}"></iron-image>
     </div>
 
   </template>
@@ -242,21 +242,30 @@
               return {};
             }
           },
-          imageError: String,
-          imageLoaded: Boolean,
-          imageSrc: String,
-          imageSmall: String,
-          isTouch: Boolean,
-          spinnerActive: Boolean,
-          toolbarVisible: Boolean,
+          active: {
+            type: Boolean,
+            value: false,
+          },
+          opened: {
+            type: Boolean,
+            value: false,
+            observer: '_openedChanged',
+          },
+          _imageError: String,
+          _imageLoaded: Boolean,
+          _imageSrc: String,
+          _imageSmall: String,
+          _isTouch: Boolean,
+          _spinnerActive: Boolean,
+          _toolbarVisible: Boolean,
         };
       }
 
       static get observers() {
         return [
           '_activeImageIndexChanged(activeImage.index)',
-          '_imageLoadedChanged(imageLoaded)',
-          '_imageErrorChanged(imageError)',
+          '_imageLoadedChanged(_imageLoaded)',
+          '_imageErrorChanged(_imageError)',
         ];
       }
 
@@ -267,7 +276,7 @@
         this._ensureAttribute('tabindex', 0);
 
         // Sets #overlay[hover-enabled]
-        this.isTouch = ("ontouchstart" in window) &&
+        this._isTouch = ("ontouchstart" in window) &&
                        (window.navigator.maxTouchPoints > 0 ||
                         window.navigator.msMaxTouchPoints > 0);
 
@@ -352,11 +361,11 @@
         console.log('slideshow.activeImage.index:', index);
 
         // Load the image in iron-image
-        this.imageSmall = this.activeImage.small;
-        this.imageSrc = this.activeImage.src;
+        this._imageSmall = this.activeImage.small;
+        this._imageSrc = this.activeImage.src;
 
         // Display spinner if image hasn't been loaded
-        this.spinnerActive = !this.activeImage.loaded;
+        this._spinnerActive = !this.activeImage.loaded;
 
         // Hide previous button if first image
         if (this.hasPreviousImage) {
@@ -390,7 +399,7 @@
 
           const images = this.gallery.images;
 
-          this.spinnerActive = false;
+          this._spinnerActive = false;
 
           if (!this.activeImage.loaded) {
             this.activeImage.reference = this.$.image.shadowRoot.querySelector('img');
@@ -430,7 +439,7 @@
       }
 
       _toggleToolbar() {
-        this.toolbarVisible = !this.toolbarVisible;
+        this._toolbarVisible = !this._toolbarVisible;
       }
 
       _toggleFullscreen() {
@@ -463,10 +472,10 @@
         this.gallery._resetImageRoute();
         this._exitFullscreen();
 
-        this.imageSmall = '';
-        this.imageSrc = '';
+        this._imageSmall = '';
+        this._imageSrc = '';
 
-        this.spinnerActive = false;
+        this._spinnerActive = false;
 
         // Prevent hover state from persisting after click
         if (event) {
@@ -478,14 +487,22 @@
         }
       }
 
-      show() {
+      _openedChanged(opened) {
+        if (opened) {
+          this._show();
+        } else {
+          this._hide();
+        }
+      }
+
+      _show() {
         document.body.style.overflow = 'hidden';
-        this.toolbarVisible = true;
+        this._toolbarVisible = true;
         this.hidden = false;
         this.focus();
       }
 
-      hide() {
+      _hide() {
         document.body.style.overflow = '';
         this.hidden = true;
       }

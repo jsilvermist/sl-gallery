@@ -138,7 +138,7 @@
         console.log('_imagesChanged', images);
 
         // Give each image an index based on position in array
-        this.images.forEach((image, i) => {
+        images.forEach((image, i) => {
           image.index = i;
           image.hasCaption = Boolean(image.caption);
         });
@@ -152,27 +152,22 @@
         }
       }
 
-      _imageRouteActiveChanged(active) {
+      _imageRouteActiveChanged(routeActive) {
         console.log('_imageRouteActiveChanged');
 
-        if (active && this.active) {
+        if (routeActive && this.active) {
           console.log('_imageRouteActiveChanged -> showing gallery');
-          this.slideshow.show();
+          this.slideshow.opened = true;
         } else {
           console.log('_imageRouteActiveChanged -> hiding gallery');
           console.log('_imageRouteActiveChanged -> this.active:', this.active);
-          console.log('_imageRouteActiveChanged -> active:', active);
-          this.slideshow.hide();
+          console.log('_imageRouteActiveChanged -> routeActive:', routeActive);
+          this.slideshow.opened = false;
         }
       }
 
       _imageRouteIndexChanged(index) {
         console.log('_imageRouteIndexChanged');
-
-        if (!this.images) {
-          console.log('_imageRouteIndexChanged, images empty, returning');
-          return;
-        }
 
         if (this.imageRouteActive) {
           console.log('_imageRouteIndexChanged setting activeImage:', this.images[index]);
