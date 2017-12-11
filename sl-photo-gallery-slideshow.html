@@ -360,6 +360,9 @@
 
         console.log('slideshow.activeImage.index:', index);
 
+        // Ensure slideshow is open in case of outdated bookmark or link to non-valid index.
+        this.opened = true;
+
         // Load the image in iron-image
         this._imageSmall = this.activeImage.small;
         this._imageSrc = this.activeImage.src;
@@ -415,7 +418,6 @@
           if (this.hasNextImage) {
             this._preloadImage(images[+this.activeImage.index+1]);
           }
-
         }
       }
 
@@ -428,13 +430,13 @@
 
       _previousImage() {
         if (this.hasPreviousImage) {
-          window.location.hash = `/i/${+this.activeImage.index-1}`
+          window.location.hash = `/${this.gallery.prefix}/${+this.activeImage.index-1}`
         }
       }
 
       _nextImage() {
         if (this.hasNextImage) {
-          window.location.hash = `/i/${+this.activeImage.index+1}`
+          window.location.hash = `/${this.gallery.prefix}/${+this.activeImage.index+1}`
         }
       }
 
@@ -489,23 +491,18 @@
 
       _openedChanged(opened) {
         if (opened) {
-          this._show();
+          console.log('_openedChanged, opening slideshow');
+          document.body.style.overflow = 'hidden';
+          this._toolbarVisible = true;
+          this.hidden = false;
+          this.focus();
         } else {
-          this._hide();
+          console.log('_openedChanged, closing slideshow');
+          document.body.style.overflow = '';
+          this.hidden = true;
         }
       }
 
-      _show() {
-        document.body.style.overflow = 'hidden';
-        this._toolbarVisible = true;
-        this.hidden = false;
-        this.focus();
-      }
-
-      _hide() {
-        document.body.style.overflow = '';
-        this.hidden = true;
-      }
     }
 
     window.customElements.define(SLPhotoGallerySlideshow.is, SLPhotoGallerySlideshow);

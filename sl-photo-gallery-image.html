@@ -9,13 +9,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../app-layout/app-grid/app-grid-style.html">
-<link rel="import" href="../app-route/app-location.html">
-<link rel="import" href="../app-route/app-route.html">
 
 <dom-module id="sl-photo-gallery-image">
   <template>
-    <style include="app-grid-style">
+    <style>
       :host {
         display: inline-block;
         overflow: hidden;
@@ -50,6 +47,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         padding-top: var(--app-grid-item-height, 100%);
       }
 
+      /* [TODO] Use or remove. Used only if a inner container is added to this element */
       :host > * {
         position: absolute;
         top: 0;
@@ -69,8 +67,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return {
           _image: {
             type: String,
-            observer: '_imageChanged',
             computed: '_computeImage(src, small)',
+            observer: '_imageChanged',
           },
           src: String,
           small: String,

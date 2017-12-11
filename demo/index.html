@@ -25,6 +25,93 @@
       <h3>Basic sl-photo-gallery demo</h3>
       <demo-snippet>
         <template>
+          <sl-photo-gallery>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=257"
+                small="https://unsplash.it/400/250/?image=257"
+                title="Example Title 01"
+            ></sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=250"
+                small="https://unsplash.it/400/250/?image=250"
+                title="Another Title 02"
+            ></sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=399"
+                small="https://unsplash.it/400/250/?image=399"
+                title="Photo Title 03"
+                caption="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Necessitatibus tempora ea eius placeat. Sed culpa numquam voluptatibus possimus, eaque vel!"
+            ></sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=146"
+                small="https://unsplash.it/400/250/?image=146"
+                title="Photo Title 04"
+                caption="Necessitatibus tempora ea eius placeat. Sed culpa numquam voluptatibus possimus, eaque vel!"
+            ></sl-photo-gallery-image>
+          </sl-photo-gallery>
+        </template>
+      </demo-snippet>
+    </div>
+
+    <div class="vertical-section-container centered">
+      <h3>Multiple galleries on the same page use different prefixes (default: `i`)</h3>
+      <demo-snippet>
+        <template>
+          <sl-photo-gallery prefix="not-i">
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=248"
+                small="https://unsplash.it/400/250/?image=248"
+                title="Plant"
+                caption="Assumenda dolores deleniti, rem atque repudiandae molestias veniam hic quibusdam, quisquam ducimus recusandae pariatur, minima laborum. Doloribus dolorem magnam fuga repellendus, accusantium odio iste assumenda eaque eum, quisquam pariatur."
+            ></sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=192"
+                small="https://unsplash.it/400/250/?image=192"
+            ></sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=344"
+                small="https://unsplash.it/400/250/?image=344"
+            ></sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=111"
+                small="https://unsplash.it/400/250/?image=111"
+                title="Car"
+            ></sl-photo-gallery-image>
+          </sl-photo-gallery>
+        </template>
+      </demo-snippet>
+    </div>
+
+    <div class="vertical-section-container centered">
+      <h3>Elements can also be created dynamically and appended using native dom api's</h3>
+      <demo-snippet>
+        <template>
+          <sl-photo-gallery id="dynamicGallery" prefix="dynamic"></sl-photo-gallery>
+          <script>
+            fetch('images.json')
+              .then(data => data.json())
+              .then(images => {
+                const gallery = document.querySelector('#dynamicGallery');
+
+                for (var i = 12; i < images.length; i++) {
+                  const el = document.createElement('sl-photo-gallery-image');
+                  el.src = images[i].src;
+                  el.small = images[i].small;
+                  el.title = images[i].title;
+                  el.caption = images[i].caption;
+                  gallery.appendChild(el);
+                }
+              });
+          </script>
+        </template>
+      </demo-snippet>
+    </div>
+
+    <div class="vertical-section-container centered">
+      <h3>Any <a href="https://www.webcomponents.org/element/PolymerElements/app-layout/elements/app-grid">app-grid</a>
+        styles can be applied to a gallery, allowing for advanced customization</h3>
+      <demo-snippet>
+        <template>
           <style>
             @media (max-width: 840px) {
               sl-photo-gallery {
@@ -46,32 +133,21 @@
               }
             }
           </style>
-          <sl-photo-gallery id="gallery">
-            <sl-photo-gallery-image
-                src="https://unsplash.it/800/500/?image=257"
-                small="https://unsplash.it/400/250/?image=257"
-                title="Example Title 01">
-            </sl-photo-gallery-image>
-            <sl-photo-gallery-image
-                src="https://unsplash.it/800/500/?image=250"
-                small="https://unsplash.it/400/250/?image=250"
-                title="Another Title 02">
-            </sl-photo-gallery-image>
-            <sl-photo-gallery-image
-                src="https://unsplash.it/800/500/?image=399"
-                small="https://unsplash.it/400/250/?image=399"
-                title="Photo Title 03"
-                caption="Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-                  Necessitatibus tempora ea eius placeat.
-                  Sed culpa numquam voluptatibus possimus, eaque vel!">
-            </sl-photo-gallery-image>
-            <sl-photo-gallery-image src="https://unsplash.it/800/500/?image=250"></sl-photo-gallery-image>
-          </sl-photo-gallery>
+          <sl-photo-gallery id="advancedGallery" prefix="advanced"></sl-photo-gallery>
           <script>
             fetch('images.json')
               .then(data => data.json())
               .then(images => {
-                // document.querySelector('#gallery').images = images;
+                const gallery = document.querySelector('#advancedGallery');
+
+                images.forEach(img => {
+                  const el = document.createElement('sl-photo-gallery-image');
+                  el.src = img.src;
+                  el.small = img.small;
+                  el.title = img.title;
+                  el.caption = img.caption;
+                  gallery.appendChild(el);
+                });
               });
           </script>
         </template>

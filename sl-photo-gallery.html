@@ -63,7 +63,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <app-route
         route="{{route}}"
-        pattern="/i/:index"
+        pattern="/[[prefix]]/:index"
         data="{{imageRouteData}}"
         active="{{imageRouteActive}}"></app-route>
 
@@ -86,10 +86,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           },
           images: {
             type: Array,
-            value: function() {
-              return [];
-            },
             observer: '_imagesChanged',
+          },
+          prefix: {
+            type: String,
+            value: 'i',
           },
           route: Object,
           imageRouteData: Object,
@@ -126,18 +127,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       connectedCallback() {
         super.connectedCallback();
 
+        // Create observer to watch for new nodes added from light dom
         this._observer = new Polymer.FlattenedNodesObserver(this, (info) => {
           this.images = [...info.target.children];
         });
 
         // Create listener on image-grid to open slideshow
         this.$.imageGrid.addEventListener('click', this._expandImage);
-        this.addEventListener('click', this._expandImage);
       }
 
       disconnectedCallback() {
         super.disconnectedCallback();
 
+        // Remove observer when disconnected
         this._observer.disconnect();
 
         // Remove listener on image-grid
@@ -153,19 +155,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           image.hasCaption = Boolean(image.caption);
         });
 
+        // Manually call changed methods when images change to update routes
+        // [TODO]: Refactor so no longer necessary
+        console.log('_imagesChanged [1/2], manually calling _imageRouteActiveChanged');
+        this._imageRouteActiveChanged(this.imageRouteActive);
+        console.log('_imagesChanged [2/2], manually calling _imageRouteIndexChanged');
         this._imageRouteIndexChanged(this.imageRouteData.index);
       }
 
       _expandImage(event) {
         if (event.target.index !== undefined) {
-          window.location.hash = `/i/${event.target.index}`;
+          window.location.hash = `/${this.prefix}/${event.target.index}`;
         }
       }
 
       _imageRouteActiveChanged(routeActive) {
         console.log('_imageRouteActiveChanged');
 
-        if (routeActive && this.active) {
+        // [TODO]: Much of this function is obsolete or should be, needs cleaning
+        if (routeActive && this.active && this.images && this.images[this.imageRouteData.index]) {
           console.log('_imageRouteActiveChanged -> showing gallery');
           this.slideshow.opened = true;
         } else {
@@ -179,18 +187,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _imageRouteIndexChanged(index) {
         console.log('_imageRouteIndexChanged');
 
-        if (this.imageRouteActive) {
+        if (!this.imageRouteActive || !this.images) {
+          this.slideshow.activeImage = undefined;
+        } else {
           console.log('_imageRouteIndexChanged setting activeImage:', this.images[index]);
           this.slideshow.activeImage = this.images[index];
-        } else {
-          this.slideshow.activeImage = undefined;
         }
       }
 
       _resetImageRoute() {
         console.log('closing slideshow');
 
-        history.pushState({}, document.title, window.location.pathname + window.location.search);
+        window.history.pushState({}, document.title, window.location.pathname + window.location.search);
         window.dispatchEvent(new CustomEvent('location-changed'));
 
         this.imageRouteData = {};
