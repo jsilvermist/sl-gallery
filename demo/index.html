@@ -83,6 +83,28 @@
     </div>
 
     <div class="vertical-section-container centered">
+      <h3>If you don't set the small attribute, the larger src will be used in the grid</h3>
+      <demo-snippet>
+        <template>
+          <sl-photo-gallery prefix="large-images">
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=343"
+            ></sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=110"
+            ></sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=256"
+            ></sl-photo-gallery-image>
+            <sl-photo-gallery-image
+                src="https://unsplash.it/800/500/?image=251"
+            ></sl-photo-gallery-image>
+          </sl-photo-gallery>
+        </template>
+      </demo-snippet>
+    </div>
+
+    <div class="vertical-section-container centered">
       <h3>Elements can also be created dynamically and appended using native dom api's</h3>
       <demo-snippet>
         <template>
@@ -115,7 +137,12 @@
             #advancedGallery {
               --gallery-columns: 3;
               --gallery-gutter: 12px;
+
+              /* Default aspect ratio is 4/3, but you can change it by setting a percentage directly */
               --gallery-item-height: 56.25%; /* 16/9 */
+
+              /* Or you can use calc to calculate an aspect ratio */
+              --gallery-item-height: calc(1 / (16 / 9) * 100%);
             }
 
             @media (max-width: 840px) {
