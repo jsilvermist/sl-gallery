@@ -21,16 +21,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         display: block;
         overflow: hidden;
 
-        --app-grid-columns: 4;
-        --app-grid-gutter: 8px;
-        --app-grid-item-height: 75%;
-        --app-grid-expandible-item-columns: 2;
-
-        --app-grid-expandible-item: {
-          -webkit-flex-basis: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns, 1) - var(--app-grid-gutter, 0px)) !important;
-          flex-basis: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns, 1) - var(--app-grid-gutter, 0px)) !important;
-          max-width: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns, 1) - var(--app-grid-gutter, 0px)) !important;
-        };
+        --gallery-columns: 4;
+        --gallery-gutter: 8px;
+        --gallery-item-height: 75%;
       }
 
       #imageGrid {
@@ -46,8 +39,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         -webkit-flex-wrap: wrap;
         flex-wrap: wrap;
 
-        padding-top: var(--app-grid-gutter, 0px);
-        padding-left: var(--app-grid-gutter, 0px);
+        padding-top: var(--gallery-gutter, 0px);
+        padding-left: var(--gallery-gutter, 0px);
         box-sizing: border-box;
 
         /* Hide ul style */
@@ -55,7 +48,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         /* Hide gutter around grid */
         padding: 0;
-        margin: 0 calc(-1 * var(--app-grid-gutter, 0px)) calc(-1 * var(--app-grid-gutter, 0px)) 0;
+        margin: 0 calc(-1 * var(--gallery-gutter, 0px)) calc(-1 * var(--gallery-gutter, 0px)) 0;
       }
     </style>
 

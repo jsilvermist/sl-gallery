@@ -29,13 +29,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         flex: 1;
 
         /* The width for an item is: (100% - subPixelAdjustment - gutter * columns) / columns */
-        -webkit-flex-basis: calc((100% - 0.1px - (var(--app-grid-gutter, 0px) * var(--app-grid-columns, 1))) / var(--app-grid-columns, 1));
-        flex-basis: calc((100% - 0.1px - (var(--app-grid-gutter, 0px) * var(--app-grid-columns, 1))) / var(--app-grid-columns, 1));
+        -webkit-flex-basis: calc((100% - 0.1px - (var(--gallery-gutter, 0px) * var(--gallery-columns, 1))) / var(--gallery-columns, 1));
+        flex-basis: calc((100% - 0.1px - (var(--gallery-gutter, 0px) * var(--gallery-columns, 1))) / var(--gallery-columns, 1));
 
-        max-width: calc((100% - 0.1px - (var(--app-grid-gutter, 0px) * var(--app-grid-columns, 1))) / var(--app-grid-columns, 1));
-        margin-bottom: var(--app-grid-gutter, 0px);
-        margin-right: var(--app-grid-gutter, 0px);
-        height: var(--app-grid-item-height);
+        max-width: calc((100% - 0.1px - (var(--gallery-gutter, 0px) * var(--gallery-columns, 1))) / var(--gallery-columns, 1));
+        margin-bottom: var(--gallery-gutter, 0px);
+        margin-right: var(--gallery-gutter, 0px);
+        height: var(--gallery-item-height);
         box-sizing: border-box;
 
         position: relative;
@@ -44,7 +44,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       :host::before {
         display: block;
         content: "";
-        padding-top: var(--app-grid-item-height, 100%);
+        padding-top: var(--gallery-item-height, 100%);
       }
 
       /* [TODO] Use or remove. Used only if a inner container is added to this element */
