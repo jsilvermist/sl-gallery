@@ -26,7 +26,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         --sl-gallery-item-height: 75%;
       }
 
-      #imageGrid {
+      .image-grid {
         display: -ms-flexbox;
         display: -webkit-flex;
         display: flex;
@@ -57,8 +57,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         data="{{_routeData}}"
         active="{{_routeActive}}"></app-route>
 
-    <!-- [TODO]: Consider removing and using element itself -->
-    <div id="imageGrid">
+    <div class="image-grid" on-click="_handleGridClicked">
       <slot></slot>
     </div>
   </template>
@@ -109,9 +108,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         // Append slideshow to root custom-element
         document.body.appendChild(this.slideshow);
-
-        // Bind class functions used as handlers
-        this._expandImage = this._expandImage.bind(this);
       }
 
       connectedCallback() {
@@ -119,12 +115,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         // Create observer to watch for new nodes added from light dom
         this._observer = new Polymer.FlattenedNodesObserver(this, (info) => {
-          // [TODO]: Consider using slotted API
           this._images = [...info.target.children];
         });
-
-        // Create listener on image-grid to open slideshow
-        this.$.imageGrid.addEventListener('click', this._expandImage);
       }
 
       disconnectedCallback() {
@@ -132,9 +124,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         // Remove observer when disconnected
         this._observer.disconnect();
+      }
 
-        // Remove listener on image-grid
-        this.$.imageGrid.removeEventListener('click', this._expandImage);
+      _handleGridClicked(event) {
+        if (event.target.index !== undefined) {
+          window.location.hash = `/${this.prefix}/${event.target.index}`;
+        }
       }
 
       _imagesChanged(images) {
@@ -152,12 +147,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this._routeActiveChanged(this._routeActive);
         console.log('_imagesChanged [2/2], manually calling _routeIndexChanged');
         this._routeIndexChanged(this._routeData.index);
-      }
-
-      _expandImage(event) {
-        if (event.target.index !== undefined) {
-          window.location.hash = `/${this.prefix}/${event.target.index}`;
-        }
       }
 
       _routeActiveChanged(routeActive) {
