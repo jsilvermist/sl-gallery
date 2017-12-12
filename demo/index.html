@@ -108,21 +108,21 @@
       <h3>Elements can also be created dynamically and appended using native dom api's</h3>
       <demo-snippet>
         <template>
-          <sl-gallery id="dynamicGallery" prefix="dynamic"></sl-gallery>
+          <sl-gallery prefix="dynamic"></sl-gallery>
+
           <script>
-            fetch('images.json')
+            fetch('dynamic-images.json')
               .then(data => data.json())
               .then(images => {
-                const gallery = document.querySelector('#dynamicGallery');
-
-                for (let i = 8; i < 12; i++) {
+                const gallery = document.querySelector('sl-gallery[prefix="dynamic"]');
+                images.forEach(img => {
                   const el = document.createElement('sl-gallery-image');
-                  el.src = images[i].src;
-                  el.small = images[i].small;
-                  el.title = images[i].title;
-                  el.caption = images[i].caption;
+                  el.src = img.src || '';
+                  el.small = img.small || '';
+                  el.title = img.title || '';
+                  el.caption = img.caption || '';
                   gallery.appendChild(el);
-                }
+                });
               });
           </script>
         </template>
@@ -130,11 +130,14 @@
     </div>
 
     <div class="vertical-section-container centered">
-      <h3>The gallery can be customized using css variables</h3>
+      <h3>The gallery can be customized using css variables,
+      you can also create images with the `create` helper method</h3>
       <demo-snippet>
         <template>
+          <sl-gallery prefix="advanced"></sl-gallery>
+
           <style>
-            #advancedGallery {
+            sl-gallery[prefix="advanced"] {
               --sl-gallery-columns: 3;
               --sl-gallery-gutter: 12px;
 
@@ -146,27 +149,29 @@
             }
 
             @media (max-width: 840px) {
-              #advancedGallery {
+              sl-gallery[prefix="advanced"] {
                 --sl-gallery-columns: 2;
                 --sl-gallery-gutter: 6px;
               }
             }
           </style>
-          <sl-gallery id="advancedGallery" prefix="advanced"></sl-gallery>
+
           <script>
-            fetch('images.json')
+            fetch('advanced-images.json')
               .then(data => data.json())
               .then(images => {
-                const gallery = document.querySelector('#advancedGallery');
-
-                for (let i = 9; i < 15; i++) {
-                  const el = document.createElement('sl-gallery-image');
-                  el.src = images[i].src;
-                  el.small = images[i].small;
-                  el.title = images[i].title;
-                  el.caption = images[i].caption;
-                  gallery.appendChild(el);
-                }
+                document.addEventListener('WebComponentsReady', event => {
+                  const gallery = document.querySelector('sl-gallery[prefix="advanced"]');
+                  const createImage = customElements.get('sl-gallery-image').create;
+                  images.forEach(img => {
+                    gallery.appendChild(createImage({
+                      src: img.src,
+                      small: img.small,
+                      title: img.title,
+                      caption: img.caption,
+                    }));
+                  });
+                });
               });
           </script>
         </template>
