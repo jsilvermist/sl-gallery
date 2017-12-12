@@ -134,8 +134,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       _imagesChanged(images) {
-        console.log('_imagesChanged', images);
-
         // Give each image an index based on position in array
         images.forEach((image, i) => {
           image.index = i;
@@ -144,7 +142,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         // Manually call changed methods when images change to update routes
         // [TODO]: Refactor so this is no longer necessary
-        console.log('_imagesChanged, manually calling _activeChanged');
         this._activeChanged();
       }
 
@@ -152,33 +149,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // Manually call changed methods when active changes to update routes
         // [TODO]: Refactor so this is no longer necessary
         if (active !== undefined && old === undefined) return;
-        console.log('_activeChanged [1/2], manually calling _routeActiveChanged');
         this._routeActiveChanged(this._routeActive);
-        console.log('_activeChanged [2/2], manually calling _routeIndexChanged');
         this._routeIndexChanged(this._routeData.index);
       }
 
       _routeActiveChanged(routeActive) {
-        console.log('_routeActiveChanged');
-
         // [TODO]: Should reflect state to slideshow and handle view from slideshow.active
         if (this.active && routeActive && this._images && this._images[this._routeData.index]) {
-          console.log('_routeActiveChanged -> showing gallery');
           this.slideshow.opened = true;
         } else {
-          console.log('_routeActiveChanged -> hiding gallery');
-          console.log('_routeActiveChanged -> this.active:', this.active);
-          console.log('_routeActiveChanged -> routeActive:', routeActive);
           this.slideshow.opened = false;
         }
       }
 
       _routeIndexChanged(routeIndex) {
-        console.log('_routeIndexChanged');
         if (!this.active || !this._routeActive || !this._images) {
           this.slideshow.activeImage = undefined;
         } else {
-          console.log('_routeIndexChanged setting activeImage:', this._images[routeIndex]);
           this.slideshow.activeImage = this._images[routeIndex];
         }
       }
