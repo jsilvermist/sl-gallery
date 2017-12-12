@@ -361,6 +361,7 @@
         console.log('slideshow.activeImage.index:', index);
 
         // Ensure slideshow is open in case of outdated bookmark or link to non-valid index.
+        // [TODO]: Is this still needed?
         this.opened = true;
 
         // Load the image in iron-image
@@ -471,7 +472,14 @@
       }
 
       _closeSlideshow(event) {
-        this.gallery._resetImageRoute();
+        console.log('_closeSlideshow, resetting slideshow');
+
+        window.history.pushState({}, document.title, window.location.pathname + window.location.search);
+        window.dispatchEvent(new CustomEvent('location-changed'));
+
+        // [TODO]: This can be removed after upstream change to reset route data
+        this.gallery._routeData = {};
+
         this._exitFullscreen();
 
         this._imageSmall = '';

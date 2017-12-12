@@ -72,6 +72,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           active: {
             type: Boolean,
             value: true,
+            observer: '_activeChanged',
           },
           prefix: {
             type: String,
@@ -142,18 +143,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         // Manually call changed methods when images change to update routes
-        // [TODO]: Refactor so no longer necessary
-        console.log('_imagesChanged [1/2], manually calling _routeActiveChanged');
+        // [TODO]: Refactor so this is no longer necessary
+        console.log('_imagesChanged, manually calling _activeChanged');
+        this._activeChanged();
+      }
+
+      _activeChanged(active, old) {
+        // Manually call changed methods when active changes to update routes
+        // [TODO]: Refactor so this is no longer necessary
+        if (active !== undefined && old === undefined) return;
+        console.log('_activeChanged [1/2], manually calling _routeActiveChanged');
         this._routeActiveChanged(this._routeActive);
-        console.log('_imagesChanged [2/2], manually calling _routeIndexChanged');
+        console.log('_activeChanged [2/2], manually calling _routeIndexChanged');
         this._routeIndexChanged(this._routeData.index);
       }
 
       _routeActiveChanged(routeActive) {
         console.log('_routeActiveChanged');
 
-        // [TODO]: Much of this function is obsolete or should be, needs cleaning
-        if (routeActive && this.active && this._images && this._images[this._routeData.index]) {
+        // [TODO]: Should reflect state to slideshow and handle view from slideshow.active
+        if (this.active && routeActive && this._images && this._images[this._routeData.index]) {
           console.log('_routeActiveChanged -> showing gallery');
           this.slideshow.opened = true;
         } else {
@@ -164,27 +173,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
       }
 
-      _routeIndexChanged(index) {
+      _routeIndexChanged(routeIndex) {
         console.log('_routeIndexChanged');
-
-        if (!this._routeActive || !this._images) {
+        if (!this.active || !this._routeActive || !this._images) {
           this.slideshow.activeImage = undefined;
         } else {
-          console.log('_routeIndexChanged setting activeImage:', this._images[index]);
-          this.slideshow.activeImage = this._images[index];
+          console.log('_routeIndexChanged setting activeImage:', this._images[routeIndex]);
+          this.slideshow.activeImage = this._images[routeIndex];
         }
-      }
-
-      _resetImageRoute() {
-        console.log('closing slideshow');
-
-        window.history.pushState({}, document.title, window.location.pathname + window.location.search);
-        window.dispatchEvent(new CustomEvent('location-changed'));
-
-        // [TODO]: This can be removed after upstream change to reset route data
-        this._routeData = {};
-
-        console.log('closed slideshow');
       }
 
     }
