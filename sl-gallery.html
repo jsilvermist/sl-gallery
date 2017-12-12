@@ -192,6 +192,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         window.history.pushState({}, document.title, window.location.pathname + window.location.search);
         window.dispatchEvent(new CustomEvent('location-changed'));
 
+        // [TODO]: This can be removed after upstream change to reset route data
         this._routeData = {};
 
         console.log('closed slideshow');
