@@ -1,5 +1,5 @@
-Photo Gallery
-=============
+Silverlinkz Photo Gallery
+=========================
 
 # TODO
 

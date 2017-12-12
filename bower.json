@@ -1,7 +1,7 @@
 {
-  "name": "sl-photo-gallery",
-  "description": "A Polymer route based photo gallery.",
-  "main": "sl-photo-gallery.html",
+  "name": "sl-gallery",
+  "description": "A Polymer hash-route based photo gallery.",
+  "main": "sl-gallery.html",
   "dependencies": {
     "app-layout": "PolymerElements/app-layout#^2.0.0",
     "app-route": "PolymerElements/app-route#^2.0.0",

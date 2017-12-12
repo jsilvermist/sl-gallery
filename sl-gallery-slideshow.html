@@ -4,14 +4,14 @@
 <link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../paper-spinner/paper-spinner-lite.html">
 <link rel="import" href="polyfills/fullscreen-api.html">
-<link rel="import" href="sl-photo-gallery-icons.html">
+<link rel="import" href="sl-gallery-icons.html">
 
-<dom-module id="sl-photo-gallery-slideshow">
+<dom-module id="sl-gallery-slideshow">
   <template>
     <style>
       :host {
         display: flex;
-        background: var(--photo-gallery-overlay-background, rgba(0, 0, 0, 0.9));
+        background: var(--sl-gallery-slideshow-background, rgba(0, 0, 0, 0.9));
         position: fixed;
         top: 0;
         left: 0;
@@ -36,7 +36,7 @@
         left: 50%;
         transform: translateX(-50%) translateY(-50%);
         z-index: 1;
-        --paper-spinner-color: var(--gallery-accent-color, #00AEC5);
+        --paper-spinner-color: var(--sl-gallery-accent-color, #00AEC5);
         --paper-spinner-stroke-width: 4px;
       }
 
@@ -203,20 +203,20 @@
     <div id="overlay" toolbar-visible$="[[_toolbarVisible]]" hover-enabled$="[[!_isTouch]]">
       <app-toolbar class="header">
         <div main-title>[[activeImage.title]]</div>
-        <paper-icon-button id="toggleFullscreen" icon="sl-photo-gallery:fullscreen"></paper-icon-button>
-        <paper-icon-button id="toolbarCloseSlideshow" icon="sl-photo-gallery:close"></paper-icon-button>
+        <paper-icon-button id="toggleFullscreen" icon="sl-gallery:fullscreen"></paper-icon-button>
+        <paper-icon-button id="toolbarCloseSlideshow" icon="sl-gallery:close"></paper-icon-button>
       </app-toolbar>
 
       <app-toolbar class="footer" has-caption$="[[activeImage.hasCaption]]">
         <div main-title>[[activeImage.caption]]</div>
       </app-toolbar>
 
-      <paper-icon-button id="closeSlideshow" icon="sl-photo-gallery:close"></paper-icon-button>
+      <paper-icon-button id="closeSlideshow" icon="sl-gallery:close"></paper-icon-button>
 
       <div id="clickBlocks">
         <div id="toggleToolbar"></div>
-        <div id="previousImageBlock"><paper-icon-button icon="sl-photo-gallery:chevron-left"></paper-icon-button></div>
-        <div id="nextImageBlock"><paper-icon-button icon="sl-photo-gallery:chevron-right"></paper-icon-button></div>
+        <div id="previousImageBlock"><paper-icon-button icon="sl-gallery:chevron-left"></paper-icon-button></div>
+        <div id="nextImageBlock"><paper-icon-button icon="sl-gallery:chevron-right"></paper-icon-button></div>
       </div>
     </div>
 
@@ -230,9 +230,9 @@
   </template>
 
   <script>
-    class SLPhotoGallerySlideshow extends Polymer.Element {
+    class SLGallerySlideshow extends Polymer.Element {
 
-      static get is() { return 'sl-photo-gallery-slideshow'; }
+      static get is() { return 'sl-gallery-slideshow'; }
 
       static get properties() {
         return {
@@ -464,9 +464,9 @@
 
       _fullscreenChanged() {
         if (document.fullscreenElement) {
-          this.$.toggleFullscreen.icon = 'sl-photo-gallery:fullscreen-exit';
+          this.$.toggleFullscreen.icon = 'sl-gallery:fullscreen-exit';
         } else {
-          this.$.toggleFullscreen.icon = 'sl-photo-gallery:fullscreen';
+          this.$.toggleFullscreen.icon = 'sl-gallery:fullscreen';
         }
       }
 
@@ -505,6 +505,6 @@
 
     }
 
-    window.customElements.define(SLPhotoGallerySlideshow.is, SLPhotoGallerySlideshow);
+    window.customElements.define(SLGallerySlideshow.is, SLGallerySlideshow);
   </script>
 </dom-module>

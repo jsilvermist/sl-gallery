@@ -11,19 +11,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../app-route/app-location.html">
 <link rel="import" href="../app-route/app-route.html">
-<link rel="import" href="sl-photo-gallery-image.html">
-<link rel="import" href="sl-photo-gallery-slideshow.html">
+<link rel="import" href="sl-gallery-image.html">
+<link rel="import" href="sl-gallery-slideshow.html">
 
-<dom-module id="sl-photo-gallery">
+<dom-module id="sl-gallery">
   <template>
     <style>
       :host {
         display: block;
         overflow: hidden;
 
-        --gallery-columns: 4;
-        --gallery-gutter: 8px;
-        --gallery-item-height: 75%;
+        --sl-gallery-columns: 4;
+        --sl-gallery-gutter: 8px;
+        --sl-gallery-item-height: 75%;
       }
 
       #imageGrid {
@@ -39,8 +39,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         -webkit-flex-wrap: wrap;
         flex-wrap: wrap;
 
-        padding-top: var(--gallery-gutter, 0px);
-        padding-left: var(--gallery-gutter, 0px);
+        padding-top: var(--sl-gallery-gutter, 0px);
+        padding-left: var(--sl-gallery-gutter, 0px);
         box-sizing: border-box;
 
         /* Hide ul style */
@@ -48,7 +48,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         /* Hide gutter around grid */
         padding: 0;
-        margin: 0 calc(-1 * var(--gallery-gutter, 0px)) calc(-1 * var(--gallery-gutter, 0px)) 0;
+        margin: 0 calc(-1 * var(--sl-gallery-gutter, 0px)) calc(-1 * var(--sl-gallery-gutter, 0px)) 0;
       }
     </style>
 
@@ -67,9 +67,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
 
   <script>
-    class SLPhotoGallery extends Polymer.Element {
+    class SLGallery extends Polymer.Element {
 
-      static get is() { return 'sl-photo-gallery'; }
+      static get is() { return 'sl-gallery'; }
 
       static get properties() {
         return {
@@ -102,7 +102,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         super();
 
         // Create slideshow element, keep handle as this.slideshow
-        this.slideshow = document.createElement('sl-photo-gallery-slideshow');
+        this.slideshow = document.createElement('sl-gallery-slideshow');
 
         // Create reference to local scope in slideshow
         this.slideshow.gallery = this;
@@ -201,6 +201,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     }
 
-    window.customElements.define(SLPhotoGallery.is, SLPhotoGallery);
+    window.customElements.define(SLGallery.is, SLGallery);
   </script>
 </dom-module>

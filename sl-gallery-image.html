@@ -10,7 +10,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../polymer/polymer-element.html">
 
-<dom-module id="sl-photo-gallery-image">
+<dom-module id="sl-gallery-image">
   <template>
     <style>
       :host {
@@ -29,13 +29,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         flex: 1;
 
         /* The width for an item is: (100% - subPixelAdjustment - gutter * columns) / columns */
-        -webkit-flex-basis: calc((100% - 0.1px - (var(--gallery-gutter, 0px) * var(--gallery-columns, 1))) / var(--gallery-columns, 1));
-        flex-basis: calc((100% - 0.1px - (var(--gallery-gutter, 0px) * var(--gallery-columns, 1))) / var(--gallery-columns, 1));
+        -webkit-flex-basis: calc((100% - 0.1px - (var(--sl-gallery-gutter, 0px) * var(--sl-gallery-columns, 1))) / var(--sl-gallery-columns, 1));
+        flex-basis: calc((100% - 0.1px - (var(--sl-gallery-gutter, 0px) * var(--sl-gallery-columns, 1))) / var(--sl-gallery-columns, 1));
 
-        max-width: calc((100% - 0.1px - (var(--gallery-gutter, 0px) * var(--gallery-columns, 1))) / var(--gallery-columns, 1));
-        margin-bottom: var(--gallery-gutter, 0px);
-        margin-right: var(--gallery-gutter, 0px);
-        height: var(--gallery-item-height);
+        max-width: calc((100% - 0.1px - (var(--sl-gallery-gutter, 0px) * var(--sl-gallery-columns, 1))) / var(--sl-gallery-columns, 1));
+        margin-bottom: var(--sl-gallery-gutter, 0px);
+        margin-right: var(--sl-gallery-gutter, 0px);
+        height: var(--sl-gallery-item-height);
         box-sizing: border-box;
 
         position: relative;
@@ -44,7 +44,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       :host::before {
         display: block;
         content: "";
-        padding-top: var(--gallery-item-height, 100%);
+        padding-top: var(--sl-gallery-item-height, 100%);
       }
 
       /* [TODO] Use or remove. Used only if a inner container is added to this element */
@@ -59,9 +59,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
 
   <script>
-    class SLPhotoGalleryImage extends Polymer.Element {
+    class SLGalleryImage extends Polymer.Element {
 
-      static get is() { return 'sl-photo-gallery-image'; }
+      static get is() { return 'sl-gallery-image'; }
 
       static get properties() {
         return {
@@ -91,6 +91,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     }
 
-    window.customElements.define(SLPhotoGalleryImage.is, SLPhotoGalleryImage);
+    window.customElements.define(SLGalleryImage.is, SLGalleryImage);
   </script>
 </dom-module>
