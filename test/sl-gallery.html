@@ -21,27 +21,39 @@
 
     <test-fixture id="ImagesStringTestFixture">
       <template>
-        <sl-gallery images='[{
-          "src": "https://unsplash.it/800/500/?image=257",
-          "small": "https://unsplash.it/400/250/?image=257",
-          "title": "Example Title 01",
-          "caption": "This in an example caption!"
-        }]'></sl-gallery>
+        <sl-gallery>
+          <sl-gallery-image
+              src="https://unsplash.it/800/500/?image=257"
+              small="https://unsplash.it/400/250/?image=257"
+              title="Example Title 01"
+              caption="This in an example caption!"
+          ></sl-gallery-image>
+        </sl-gallery>
       </template>
     </test-fixture>
 
     <script>
       suite('sl-gallery', () => {
 
+        /**
+         * Reference list of assertions
+         * assert.equal(element.innerHTML, 'Expected innerHTML content');
+         * assert.isTrue(expression);
+         * assert.isFalse(expression);
+         * assert.isArray(array);
+         * assert.isObject(object);
+         */
+
         test('slideshow hidden on load', () => {
           const gallery = fixture('BasicTestFixture');
-          assert.isTrue(gallery.slideshow.hidden);
+          assert.isTrue(gallery.slideshow.hidden, 'slideshow is hidden');
+          assert.isFalse(gallery.slideshow.opened, 'slideshow is not opened');
         });
 
         test('images is an array with an object', () => {
           const gallery = fixture('ImagesStringTestFixture');
           assert.isArray(gallery.images, 'gallery.images is an array');
-          assert.isObject(gallery.images[0], 'gallery.images contains an object');
+          assert.isTrue(gallery.images[0] instanceof HTMLElement, 'gallery.images contains an HTMLElement');
         });
 
       });
