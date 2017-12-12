@@ -49,13 +49,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
-    <app-location route="{{route}}" use-hash-as-path></app-location>
+    <app-location route="{{_route}}" use-hash-as-path></app-location>
 
     <app-route
-        route="{{route}}"
+        route="{{_route}}"
         pattern="/[[prefix]]/:index"
-        data="{{imageRouteData}}"
-        active="{{imageRouteActive}}"></app-route>
+        data="{{_routeData}}"
+        active="{{_routeActive}}"></app-route>
 
     <!-- [TODO]: Consider removing and using element itself -->
     <div id="imageGrid">
@@ -74,24 +74,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             type: Boolean,
             value: true,
           },
-          images: {
-            type: Array,
-            observer: '_imagesChanged',
-          },
           prefix: {
             type: String,
             value: 'i',
           },
-          route: Object,
-          imageRouteData: Object,
-          imageRouteActive: Boolean,
+          _images: {
+            type: Array,
+            observer: '_imagesChanged',
+          },
+          _route: Object,
+          _routeData: Object,
+          _routeActive: Boolean,
         };
       }
 
       static get observers() {
         return [
-          '_imageRouteActiveChanged(imageRouteActive)',
-          '_imageRouteIndexChanged(imageRouteData.index)',
+          '_routeActiveChanged(_routeActive)',
+          '_routeIndexChanged(_routeData.index)',
         ];
       }
 
@@ -119,7 +119,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         // Create observer to watch for new nodes added from light dom
         this._observer = new Polymer.FlattenedNodesObserver(this, (info) => {
-          this.images = [...info.target.children];
+          // [TODO]: Consider using slotted API
+          this._images = [...info.target.children];
         });
 
         // Create listener on image-grid to open slideshow
@@ -147,10 +148,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         // Manually call changed methods when images change to update routes
         // [TODO]: Refactor so no longer necessary
-        console.log('_imagesChanged [1/2], manually calling _imageRouteActiveChanged');
-        this._imageRouteActiveChanged(this.imageRouteActive);
-        console.log('_imagesChanged [2/2], manually calling _imageRouteIndexChanged');
-        this._imageRouteIndexChanged(this.imageRouteData.index);
+        console.log('_imagesChanged [1/2], manually calling _routeActiveChanged');
+        this._routeActiveChanged(this._routeActive);
+        console.log('_imagesChanged [2/2], manually calling _routeIndexChanged');
+        this._routeIndexChanged(this._routeData.index);
       }
 
       _expandImage(event) {
@@ -159,29 +160,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
       }
 
-      _imageRouteActiveChanged(routeActive) {
-        console.log('_imageRouteActiveChanged');
+      _routeActiveChanged(routeActive) {
+        console.log('_routeActiveChanged');
 
         // [TODO]: Much of this function is obsolete or should be, needs cleaning
-        if (routeActive && this.active && this.images && this.images[this.imageRouteData.index]) {
-          console.log('_imageRouteActiveChanged -> showing gallery');
+        if (routeActive && this.active && this._images && this._images[this._routeData.index]) {
+          console.log('_routeActiveChanged -> showing gallery');
           this.slideshow.opened = true;
         } else {
-          console.log('_imageRouteActiveChanged -> hiding gallery');
-          console.log('_imageRouteActiveChanged -> this.active:', this.active);
-          console.log('_imageRouteActiveChanged -> routeActive:', routeActive);
+          console.log('_routeActiveChanged -> hiding gallery');
+          console.log('_routeActiveChanged -> this.active:', this.active);
+          console.log('_routeActiveChanged -> routeActive:', routeActive);
           this.slideshow.opened = false;
         }
       }
 
-      _imageRouteIndexChanged(index) {
-        console.log('_imageRouteIndexChanged');
+      _routeIndexChanged(index) {
+        console.log('_routeIndexChanged');
 
-        if (!this.imageRouteActive || !this.images) {
+        if (!this._routeActive || !this._images) {
           this.slideshow.activeImage = undefined;
         } else {
-          console.log('_imageRouteIndexChanged setting activeImage:', this.images[index]);
-          this.slideshow.activeImage = this.images[index];
+          console.log('_routeIndexChanged setting activeImage:', this._images[index]);
+          this.slideshow.activeImage = this._images[index];
         }
       }
 
@@ -191,7 +192,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         window.history.pushState({}, document.title, window.location.pathname + window.location.search);
         window.dispatchEvent(new CustomEvent('location-changed'));
 
-        this.imageRouteData = {};
+        this._routeData = {};
 
         console.log('closed slideshow');
       }

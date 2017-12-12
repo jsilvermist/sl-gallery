@@ -338,21 +338,21 @@
       }
 
       get hasNextImage() {
-        return +this.activeImage.index < (this.gallery.images.length-1);
+        return +this.activeImage.index < (this.gallery._images.length-1);
       }
 
       _activeImageIndexChanged(index) {
-        const images = this.gallery.images;
         console.log('_activeImageIndexChanged, index:', index);
 
         // Exit if gallery not active, no images in gallery, or index is undefined
-        if (!this.gallery.active || !this.gallery.imageRouteActive || !images || index === undefined) {
+        if (!this.gallery.active || !this.gallery._routeActive ||
+            !this.gallery._images || index === undefined) {
           console.log('slideshow._activeImageIndexChanged exiting');
           return;
         }
 
         // If no valid image index set, reset image and close slideshow
-        if (index === '' || isNaN(index) || index < 0 || index >= images.length) {
+        if (index === '' || isNaN(index) || index < 0 || index >= this.gallery._images.length) {
           console.log('resetting slideshow not valid imageId:', index);
           this._closeSlideshow();
           return;
@@ -400,7 +400,7 @@
         if (loaded) {
           console.log('_imageLoadedChanged');
 
-          const images = this.gallery.images;
+          const images = this.gallery._images;
 
           this._spinnerActive = false;
 
@@ -430,13 +430,13 @@
 
       _previousImage() {
         if (this.hasPreviousImage) {
-          window.location.hash = `/${this.gallery.prefix}/${+this.activeImage.index-1}`
+          window.location.hash = `/${this.gallery.prefix}/${+this.activeImage.index-1}`;
         }
       }
 
       _nextImage() {
         if (this.hasNextImage) {
-          window.location.hash = `/${this.gallery.prefix}/${+this.activeImage.index+1}`
+          window.location.hash = `/${this.gallery.prefix}/${+this.activeImage.index+1}`;
         }
       }
 

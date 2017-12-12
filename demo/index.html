@@ -115,7 +115,7 @@
               .then(images => {
                 const gallery = document.querySelector('#dynamicGallery');
 
-                for (var i = 8; i < 12; i++) {
+                for (let i = 8; i < 12; i++) {
                   const el = document.createElement('sl-gallery-image');
                   el.src = images[i].src;
                   el.small = images[i].small;
@@ -159,7 +159,7 @@
               .then(images => {
                 const gallery = document.querySelector('#advancedGallery');
 
-                for (var i = 9; i < 15; i++) {
+                for (let i = 9; i < 15; i++) {
                   const el = document.createElement('sl-gallery-image');
                   el.src = images[i].src;
                   el.small = images[i].small;
