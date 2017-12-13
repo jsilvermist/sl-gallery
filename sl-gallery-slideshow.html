@@ -343,17 +343,23 @@
       }
 
       _activeImageIndexChanged(index) {
+        console.log('_activeImageIndexChanged, index:', index);
+
         // Exit if gallery not active, no images in gallery, or index is undefined
         if (!this.gallery.active || !this.gallery._routeActive ||
             !this.gallery._images || index === undefined) {
+          console.log('slideshow._activeImageIndexChanged exiting');
           return;
         }
 
         // If no valid image index set, reset image and close slideshow
         if (index === '' || isNaN(index) || index < 0 || index >= this.gallery._images.length) {
+          console.log('resetting slideshow not valid imageId:', index);
           this._closeSlideshow();
           return;
         }
+
+        console.log('slideshow.activeImage.index:', index);
 
         // Ensure slideshow is open in case of outdated bookmark or link to non-valid index.
         // [TODO]: Is this still needed?
@@ -394,6 +400,8 @@
 
       _imageLoadedChanged(loaded) {
         if (loaded) {
+          console.log('_imageLoadedChanged');
+
           const images = this.gallery._images;
 
           this._spinnerActive = false;
@@ -465,6 +473,8 @@
       }
 
       _closeSlideshow(event) {
+        console.log('_closeSlideshow, resetting slideshow');
+
         window.history.pushState({}, document.title, window.location.pathname + window.location.search);
         window.dispatchEvent(new CustomEvent('location-changed'));
 
@@ -490,11 +500,13 @@
 
       _openedChanged(opened) {
         if (opened) {
+          console.log('_openedChanged, opening slideshow');
           document.body.style.overflow = 'hidden';
           this._toolbarVisible = true;
           this.hidden = false;
           this.focus();
         } else {
+          console.log('_openedChanged, closing slideshow');
           document.body.style.overflow = '';
           this.hidden = true;
         }
