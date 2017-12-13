@@ -130,8 +130,7 @@
     </div>
 
     <div class="vertical-section-container centered">
-      <h3>The gallery can be customized using css variables,
-      you can also create images with the `create` helper method</h3>
+      <h3>The gallery can be customized using css variables</h3>
       <demo-snippet>
         <template>
           <sl-gallery prefix="advanced"></sl-gallery>
@@ -160,17 +159,14 @@
             fetch('advanced-images.json')
               .then(data => data.json())
               .then(images => {
-                document.addEventListener('WebComponentsReady', event => {
-                  const gallery = document.querySelector('sl-gallery[prefix="advanced"]');
-                  const createImage = customElements.get('sl-gallery-image').create;
-                  images.forEach(img => {
-                    gallery.appendChild(createImage({
-                      src: img.src,
-                      small: img.small,
-                      title: img.title,
-                      caption: img.caption,
-                    }));
-                  });
+                const gallery = document.querySelector('sl-gallery[prefix="advanced"]');
+                images.forEach(img => {
+                  const el = document.createElement('sl-gallery-image');
+                  el.src = img.src || '';
+                  el.small = img.small || '';
+                  el.title = img.title || '';
+                  el.caption = img.caption || '';
+                  gallery.appendChild(el);
                 });
               });
           </script>

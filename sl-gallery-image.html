@@ -77,15 +77,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         };
       }
 
-      static create(obj) {
-        const el = new SLGalleryImage();
-        el.src = obj.src || '';
-        el.small = obj.small || '';
-        el.title = obj.title || '';
-        el.caption = obj.caption || '';
-        return el;
-      }
-
       _computeImage(src, small) {
         if (small) {
           return small;
