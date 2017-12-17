@@ -13,20 +13,30 @@
   </head>
   <body>
 
-    <test-fixture id="BasicTestFixture">
-      <template>
-        <sl-gallery></sl-gallery>
-      </template>
-    </test-fixture>
-
-    <test-fixture id="ImagesStringTestFixture">
+    <test-fixture id="GalleryTestFixture">
       <template>
         <sl-gallery>
           <sl-gallery-image
               src="https://unsplash.it/800/500/?image=257"
               small="https://unsplash.it/400/250/?image=257"
               title="Example Title 01"
-              caption="This in an example caption!"
+          ></sl-gallery-image>
+          <sl-gallery-image
+              src="https://unsplash.it/800/500/?image=250"
+              small="https://unsplash.it/400/250/?image=250"
+              title="Another Title 02"
+          ></sl-gallery-image>
+          <sl-gallery-image
+              src="https://unsplash.it/800/500/?image=399"
+              small="https://unsplash.it/400/250/?image=399"
+              title="Photo Title 03"
+              caption="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Necessitatibus tempora ea eius placeat. Sed culpa numquam voluptatibus possimus, eaque vel!"
+          ></sl-gallery-image>
+          <sl-gallery-image
+              src="https://unsplash.it/800/500/?image=146"
+              small="https://unsplash.it/400/250/?image=146"
+              title="Photo Title 04"
+              caption="Necessitatibus tempora ea eius placeat. Sed culpa numquam voluptatibus possimus, eaque vel!"
           ></sl-gallery-image>
         </sl-gallery>
       </template>
@@ -45,15 +55,18 @@
          */
 
         test('slideshow hidden on load', () => {
-          const gallery = fixture('BasicTestFixture');
+          const gallery = fixture('GalleryTestFixture');
           assert.isTrue(gallery.slideshow.hidden, 'slideshow is hidden');
           assert.isFalse(gallery.slideshow.opened, 'slideshow is not opened');
         });
 
-        test('images is an array with an object', () => {
-          const gallery = fixture('ImagesStringTestFixture');
-          assert.isArray(gallery.images, 'gallery.images is an array');
-          assert.isTrue(gallery.images[0] instanceof HTMLElement, 'gallery.images contains an HTMLElement');
+        test('images is an array with an object', (done) => {
+          const gallery = fixture('GalleryTestFixture');
+          flush(() => {
+            assert.isArray(gallery._images, 'gallery.images is an array');
+            assert.isTrue(gallery._images[0] instanceof HTMLElement, 'gallery.images contains an HTMLElement');
+            done();
+          });
         });
 
       });
