@@ -4,6 +4,7 @@ Silverlinkz Photo Gallery
 ## TODO
 
 * Write docs on how to use and customize gallery
+* Document all public members
 * Autohide previous/next image buttons when hiding slideshow toolbar
 * Add support for touch gentures with animations in slideshow
   * Swipe left and right to go back and forwards
