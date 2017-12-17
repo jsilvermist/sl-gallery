@@ -203,28 +203,56 @@
     <div id="overlay" toolbar-visible$="[[_toolbarVisible]]" hover-enabled$="[[!_isTouch]]">
       <app-toolbar class="header">
         <div main-title>[[activeImage.title]]</div>
-        <paper-icon-button id="toggleFullscreen" icon="sl-gallery:fullscreen"></paper-icon-button>
-        <paper-icon-button id="toolbarCloseSlideshow" icon="sl-gallery:close"></paper-icon-button>
+        <paper-icon-button
+            id="toggleFullscreen"
+            icon="sl-gallery:fullscreen"
+            on-click="_toggleFullscreen">
+        </paper-icon-button>
+        <paper-icon-button
+            id="toolbarCloseSlideshow"
+            icon="sl-gallery:close"
+            on-click="_closeSlideshow">
+        </paper-icon-button>
       </app-toolbar>
 
       <app-toolbar class="footer" has-caption$="[[activeImage.hasCaption]]">
         <div main-title>[[activeImage.caption]]</div>
       </app-toolbar>
 
-      <paper-icon-button id="closeSlideshow" icon="sl-gallery:close"></paper-icon-button>
+      <paper-icon-button
+          id="closeSlideshow"
+          icon="sl-gallery:close"
+          on-click="_closeSlideshow">
+      </paper-icon-button>
 
       <div id="clickBlocks">
-        <div id="toggleToolbar"></div>
-        <div id="previousImageBlock"><paper-icon-button icon="sl-gallery:chevron-left"></paper-icon-button></div>
-        <div id="nextImageBlock"><paper-icon-button icon="sl-gallery:chevron-right"></paper-icon-button></div>
+        <div id="toggleToolbar" on-click="_toggleToolbar"></div>
+        <div id="previousImageBlock" on-click="_previousImage">
+          <paper-icon-button icon="sl-gallery:chevron-left"></paper-icon-button>
+        </div>
+        <div id="nextImageBlock" on-click="_nextImage">
+          <paper-icon-button icon="sl-gallery:chevron-right"></paper-icon-button>
+        </div>
       </div>
     </div>
 
-    <paper-spinner-lite active="[[_spinnerActive]]" hidden="[[!_spinnerActive]]"></paper-spinner-lite>
+    <paper-spinner-lite
+        active="[[_spinnerActive]]"
+        hidden="[[!_spinnerActive]]">
+    </paper-spinner-lite>
 
     <div class="image-container">
-      <iron-image id="image" src="[[_imageSrc]]" alt="" preload fade sizing="contain"
-          placeholder="[[_imageSmall]]" loaded="{{_imageLoaded}}" error="{{_imageError}}"></iron-image>
+      <iron-image
+          id="image"
+          src="[[_imageSrc]]"
+          alt=""
+          preload
+          fade
+          sizing="contain"
+          placeholder="[[_imageSmall]]"
+          loaded="{{_imageLoaded}}"
+          error="{{_imageError}}">
+      </iron-image>
     </div>
 
   </template>
@@ -242,11 +270,12 @@
               return {};
             }
           },
-          // [TODO]: Slideshow active not yet implemented
-          active: {
+          // [TODO]: Slideshow active not yet implemented,
+          // will simplify route activity and toggling slideshow.
+          /*active: {
             type: Boolean,
             value: false,
-          },
+          },*/
           opened: {
             type: Boolean,
             value: false,
@@ -270,6 +299,14 @@
         ];
       }
 
+      constructor() {
+        super();
+
+        // Bind handlers to `this` to allow easy listener removal
+        this._handleKeydown = this._handleKeydown.bind(this);
+        this._fullscreenChanged = this._fullscreenChanged.bind(this);
+      }
+
       ready() {
         super.ready();
 
@@ -281,29 +318,29 @@
                        (window.navigator.maxTouchPoints > 0 ||
                         window.navigator.msMaxTouchPoints > 0);
 
-        // Static close button listener
-        this.$.closeSlideshow.addEventListener('click', this._closeSlideshow.bind(this));
-
-        // Toolbar button listeners
-        this.$.toolbarCloseSlideshow.addEventListener('click', this._closeSlideshow.bind(this));
-        this.$.toggleFullscreen.addEventListener('click', this._toggleFullscreen.bind(this));
-
-        // Touch area listeners
-        this.$.toggleToolbar.addEventListener('click', this._toggleToolbar.bind(this));
-        this.$.previousImageBlock.addEventListener('click', this._previousImage.bind(this));
-        this.$.nextImageBlock.addEventListener('click', this._nextImage.bind(this));
-
-        // Handle key presses
-        this.addEventListener('keydown', this._handleKeydown.bind(this));
-
-        // Listen for entering/exiting fullscreen
-        document.addEventListener('fullscreenchange', this._fullscreenChanged.bind(this));
-
-        // Register event listeners from this element for shadowRoot compatibility
+        // Register polyfill event listeners from this element for shadowRoot compatibility
         if (!document.registerFullscreen(this)) {
           // Remove fullscreen button if not supported
           this.$.toggleFullscreen.parentNode.removeChild(this.$.toggleFullscreen);
         }
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+
+        // Handle key presses
+        this.addEventListener('keydown', this._handleKeydown);
+
+        // Listen for entering/exiting fullscreen
+        document.addEventListener('fullscreenchange', this._fullscreenChanged);
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+
+        // Clean up event listeners on disconnect
+        this.removeEventListener('keydown', this._handleKeydown);
+        document.removeEventListener('fullscreenchange', this._fullscreenChanged);
       }
 
       _handleKeydown(event) {
@@ -465,7 +502,8 @@
       }
 
       _closeSlideshow(event) {
-        window.history.pushState({}, document.title, window.location.pathname + window.location.search);
+        window.history.pushState({}, document.title,
+            window.location.pathname + window.location.search);
         window.dispatchEvent(new CustomEvent('location-changed'));
 
         // [TODO]: This can be removed after upstream change to reset route data
