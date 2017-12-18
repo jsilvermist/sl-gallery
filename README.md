@@ -1,6 +1,8 @@
 Silverlinkz Photo Gallery
 =========================
 
+[![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg?style=flat-square)](https://www.webcomponents.org/element/jsilvermist/sl-gallery)
+
 A Polymer hash-route based photo gallery.
 
 Note: Fullscreen won't work on `webcomponents.org`, but will work when not in a fullscreen limited iframe.
