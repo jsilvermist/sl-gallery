@@ -70,10 +70,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             computed: '_computeImage(src, small)',
             observer: '_imageChanged',
           },
+          _hasCaption: {
+            type: Boolean,
+            computed: '_computeHasCaption(caption)',
+          },
           src: String,
           small: String,
           title: String,
-          cation: String,
+          caption: String,
         };
       }
 
@@ -83,6 +87,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         } else {
           return src;
         }
+      }
+
+      _computeHasCaption(caption) {
+        return Boolean(caption);
       }
 
       _imageChanged(image) {

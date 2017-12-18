@@ -149,7 +149,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // Give each image an index based on position in array
         images.forEach((image, i) => {
           image.index = i;
-          image.hasCaption = Boolean(image.caption);
         });
 
         // Manually call changed methods when images change to update routes
