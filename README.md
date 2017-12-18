@@ -3,6 +3,8 @@ Silverlinkz Photo Gallery
 
 A Polymer hash-route based photo gallery.
 
+Note: Fullscreen won't work on `webcomponents.org`, but will work when not in a fullscreen limited iframe.
+
 ## Installation
 
 ```sh
