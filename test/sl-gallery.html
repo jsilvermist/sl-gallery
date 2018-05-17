@@ -6,10 +6,10 @@
 
     <title>sl-gallery test</title>
 
-    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
-    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../../../@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../../../wct-browser-legacy/browser.js"></script>
 
-    <link rel="import" href="../sl-gallery.html">
+    <script type="module" src="../sl-gallery.js"></script>
   </head>
   <body>
 
@@ -42,35 +42,36 @@
       </template>
     </test-fixture>
 
-    <script>
-      suite('sl-gallery', () => {
+    <script type="module">
+import '../sl-gallery.js';
+suite('sl-gallery', () => {
 
-        /**
-         * Reference list of assertions
-         * assert.equal(element.innerHTML, 'Expected innerHTML content');
-         * assert.isTrue(expression);
-         * assert.isFalse(expression);
-         * assert.isArray(array);
-         * assert.isObject(object);
-         */
+  /**
+   * Reference list of assertions
+   * assert.equal(element.innerHTML, 'Expected innerHTML content');
+   * assert.isTrue(expression);
+   * assert.isFalse(expression);
+   * assert.isArray(array);
+   * assert.isObject(object);
+   */
 
-        test('slideshow hidden on load', () => {
-          const gallery = fixture('GalleryTestFixture');
-          assert.isTrue(gallery.slideshow.hidden, 'slideshow is hidden');
-          assert.isFalse(gallery.slideshow.opened, 'slideshow is not opened');
-        });
+  test('slideshow hidden on load', () => {
+    const gallery = fixture('GalleryTestFixture');
+    assert.isTrue(gallery.slideshow.hidden, 'slideshow is hidden');
+    assert.isFalse(gallery.slideshow.opened, 'slideshow is not opened');
+  });
 
-        test('images is an array with an object', (done) => {
-          const gallery = fixture('GalleryTestFixture');
-          flush(() => {
-            assert.isArray(gallery._images, 'gallery.images is an array');
-            assert.isTrue(gallery._images[0] instanceof HTMLElement, 'gallery.images contains an HTMLElement');
-            done();
-          });
-        });
+  test('images is an array with an object', (done) => {
+    const gallery = fixture('GalleryTestFixture');
+    flush(() => {
+      assert.isArray(gallery._images, 'gallery.images is an array');
+      assert.isTrue(gallery._images[0] instanceof HTMLElement, 'gallery.images contains an HTMLElement');
+      done();
+    });
+  });
 
-      });
-    </script>
+});
+</script>
 
   </body>
 </html>

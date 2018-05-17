@@ -6,11 +6,11 @@
 
     <title>sl-gallery demo</title>
 
-    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
 
-    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
-    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
-    <link rel="import" href="../sl-gallery.html">
+    <script type="module" src="../node_modules/@polymer/iron-demo-helpers/demo-pages-shared-styles.js"></script>
+    <script type="module" src="../node_modules/@polymer/iron-demo-helpers/demo-snippet.js"></script>
+    <script type="module" src="../sl-gallery.js"></script>
 
     <custom-style>
       <style is="custom-style" include="demo-pages-shared-styles">
@@ -54,7 +54,7 @@
     </div>
 
     <div class="vertical-section-container centered">
-      <h3>Multiple galleries on the same page use different prefixes (default: `i`)</h3>
+      <h3>Multiple galleries on the same page use different prefixes (default: i)</h3>
       <demo-snippet>
         <template>
           <sl-gallery prefix="not-i">
@@ -173,5 +173,6 @@
         </template>
       </demo-snippet>
     </div>
+
   </body>
 </html>
