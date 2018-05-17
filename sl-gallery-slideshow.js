@@ -487,7 +487,7 @@ class SLGallerySlideshow extends PolymerElement {
   }
 
   _fullscreenChanged() {
-    if (document.fullscreenElement) {
+    if (document.fullscreenElement === this) {
       this.$.toggleFullscreen.icon = 'sl-gallery:fullscreen-exit';
     } else {
       this.$.toggleFullscreen.icon = 'sl-gallery:fullscreen';
