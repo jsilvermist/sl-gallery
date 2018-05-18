@@ -79,14 +79,22 @@
       });
 
       target.addEventListener(api.events.error, (e) => {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
         document.dispatchEvent(new Event(w3.events.error));
       });
 
       return true;
     };
 
-    // document.body.registerFullscreen.call(document);
     document.registerFullscreen();
+
+  } else if (api && api === w3) {
+
+    document.registerFullscreen = function() {
+      return true;
+    };
 
   } else {
 
