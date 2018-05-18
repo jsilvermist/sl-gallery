@@ -6,7 +6,6 @@
   "dependencies": {
     "@polymer/app-layout": "^3.0.0-pre.18",
     "@polymer/app-route": "^3.0.0-pre.18",
-    "@polymer/iron-flex-layout": "^3.0.0-pre.18",
     "@polymer/iron-iconset-svg": "^3.0.0-pre.18",
     "@polymer/iron-image": "^3.0.0-pre.18",
     "@polymer/paper-icon-button": "^3.0.0-pre.18",
@@ -15,7 +14,7 @@
   },
   "devDependencies": {
     "@polymer/iron-demo-helpers": "^3.0.0-pre.18",
-    "wct-browser-legacy": "^0.0.1-pre.11",
+    "wct-browser-legacy": "^1.0.1",
     "@webcomponents/webcomponentsjs": "^2.0.0"
   },
   "resolutions": {
