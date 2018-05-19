@@ -1,10 +1,10 @@
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
+import fullscreen from '@jsilvermist/fullscreen-api';
 
 import '@polymer/app-layout/app-toolbar/app-toolbar.js';
 import '@polymer/iron-image/iron-image.js';
 import '@polymer/paper-icon-button/paper-icon-button.js';
 import '@polymer/paper-spinner/paper-spinner-lite.js';
-import './polyfills/fullscreen-api.js';
 import './sl-gallery-icons.js';
 
 class SLGallerySlideshow extends PolymerElement {
@@ -311,9 +311,8 @@ class SLGallerySlideshow extends PolymerElement {
                    (window.navigator.maxTouchPoints > 0 ||
                     window.navigator.msMaxTouchPoints > 0);
 
-    // Register polyfill event listeners from this element for shadowRoot compatibility
-    if (!document.registerFullscreen(this)) {
-      // Remove fullscreen button if not supported
+    // Remove fullscreen button if not supported
+    if (!fullscreen.enabled) {
       this.$.toggleFullscreen.parentNode.removeChild(this.$.toggleFullscreen);
     }
   }
@@ -325,7 +324,7 @@ class SLGallerySlideshow extends PolymerElement {
     this.addEventListener('keydown', this._handleKeydown);
 
     // Listen for entering/exiting fullscreen
-    document.addEventListener('fullscreenchange', this._fullscreenChanged);
+    fullscreen.addListener('change', this._fullscreenChanged);
   }
 
   disconnectedCallback() {
@@ -333,7 +332,7 @@ class SLGallerySlideshow extends PolymerElement {
 
     // Clean up event listeners on disconnect
     this.removeEventListener('keydown', this._handleKeydown);
-    document.removeEventListener('fullscreenchange', this._fullscreenChanged);
+    fullscreen.removeListener('change', this._fullscreenChanged);
   }
 
   _handleKeydown(event) {
@@ -469,9 +468,9 @@ class SLGallerySlideshow extends PolymerElement {
   }
 
   _toggleFullscreen() {
-    if (document.fullscreenEnabled) {
-      if (!document.fullscreenElement && !this.hidden) {
-        this.requestFullscreen();
+    if (fullscreen.enabled) {
+      if (!fullscreen.element && !this.hidden) {
+        fullscreen.request(this);
       } else {
         this._exitFullscreen();
       }
@@ -479,15 +478,15 @@ class SLGallerySlideshow extends PolymerElement {
   }
 
   _exitFullscreen() {
-    if (document.fullscreenEnabled && document.fullscreenElement) {
-      document.exitFullscreen();
+    if (fullscreen.enabled && fullscreen.element) {
+      fullscreen.exit();
       return true;
     }
     return false;
   }
 
   _fullscreenChanged() {
-    if (document.fullscreenElement === this) {
+    if (fullscreen.element === this) {
       this.$.toggleFullscreen.icon = 'sl-gallery:fullscreen-exit';
     } else {
       this.$.toggleFullscreen.icon = 'sl-gallery:fullscreen';
