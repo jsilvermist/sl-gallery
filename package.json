@@ -1,8 +1,27 @@
 {
   "name": "@silverlinkz/sl-gallery",
   "description": "A Polymer hash-route based photo gallery.",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "main": "sl-gallery.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsilvermist/sl-gallery.git"
+  },
+  "keywords": [
+    "gallery",
+    "images",
+    "polymer",
+    "web-component"
+  ],
+  "author": "Jsilvermist <jsilvermist@silverlinkz.net> (https://silverlinkz.net)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jsilvermist/sl-gallery/issues"
+  },
+  "homepage": "https://github.com/jsilvermist/sl-gallery#readme",
   "dependencies": {
     "@jsilvermist/fullscreen-api": "^0.2.0",
     "@polymer/app-layout": "^3.0.0-pre.18",
