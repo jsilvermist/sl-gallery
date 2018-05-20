@@ -57,6 +57,10 @@ class SLGalleryImage extends PolymerElement {
           bottom: 0;
           left: 0;
         }
+
+        :host([hidden]) {
+          display: none;
+        }
       </style>
     `;
   }

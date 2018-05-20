@@ -39,6 +39,10 @@ class SLGallery extends PolymerElement {
           --sl-gallery-item-height: 75%;
         }
 
+        :host([hidden]) {
+          display: none;
+        }
+
         .image-grid {
           display: -ms-flexbox;
           display: -webkit-flex;
