@@ -5,20 +5,20 @@ Silverlinkz Photo Gallery
 
 A Polymer hash-route based photo gallery.
 
-Note: Fullscreen won't work on `webcomponents.org`, but will work when not in a fullscreen limited iframe.
+Note: Fullscreen won't work on `webcomponents.org` due to being inside of a fullscreen restricted iframe.
 
 ## Installation
 
 ```sh
-bower install --save jsilvermist/sl-gallery
+npm install --save @silverlinkz/sl-gallery
 ```
 
 ## Usage
 
 Import the gallery:
 
-```html
-<link rel="import" href="bower_components/sl-gallery/sl-gallery.html">
+```javascript
+import '@silverlinkz/sl-gallery';
 ```
 
 Create an `sl-gallery` element, and add `sl-gallery-image` elements for each image:
