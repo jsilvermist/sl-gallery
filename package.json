@@ -1,7 +1,7 @@
 {
   "name": "@silverlinkz/sl-gallery",
   "description": "A Polymer hash-route based photo gallery.",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "main": "sl-gallery.js",
   "dependencies": {
     "@jsilvermist/fullscreen-api": "^0.2.0",
