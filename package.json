@@ -4,7 +4,9 @@
   "version": "2.0.2",
   "main": "sl-gallery.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "polymer lint",
+    "start": "polymer serve",
+    "test": "polymer test"
   },
   "repository": {
     "type": "git",
@@ -34,8 +36,8 @@
   },
   "devDependencies": {
     "@polymer/iron-demo-helpers": "^3.0.0-pre.18",
-    "wct-browser-legacy": "^1.0.1",
-    "@webcomponents/webcomponentsjs": "^2.0.0"
+    "@webcomponents/webcomponentsjs": "^2.0.0",
+    "wct-browser-legacy": "^1.0.1"
   },
   "resolutions": {
     "inherits": "2.0.3",
