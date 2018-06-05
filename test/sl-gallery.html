@@ -8,12 +8,10 @@
 
     <script src="../../../@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
     <script src="../../../wct-browser-legacy/browser.js"></script>
-
-    <script type="module" src="../sl-gallery.js"></script>
   </head>
   <body>
 
-    <test-fixture id="GalleryTestFixture">
+    <test-fixture id="gallery">
       <template>
         <sl-gallery>
           <sl-gallery-image
@@ -43,35 +41,73 @@
     </test-fixture>
 
     <script type="module">
-import '../sl-gallery.js';
-suite('sl-gallery', () => {
+      import '../sl-gallery.js';
 
-  /**
-   * Reference list of assertions
-   * assert.equal(element.innerHTML, 'Expected innerHTML content');
-   * assert.isTrue(expression);
-   * assert.isFalse(expression);
-   * assert.isArray(array);
-   * assert.isObject(object);
-   */
+      suite('sl-gallery', () => {
 
-  test('slideshow hidden on load', () => {
-    const gallery = fixture('GalleryTestFixture');
-    assert.isTrue(gallery.slideshow.hidden, 'slideshow is hidden');
-    assert.isFalse(gallery.slideshow.opened, 'slideshow is not opened');
-  });
+        let gallery;
 
-  test('images is an array with an object', (done) => {
-    const gallery = fixture('GalleryTestFixture');
-    flush(() => {
-      assert.isArray(gallery._images, 'gallery.images is an array');
-      assert.isTrue(gallery._images[0] instanceof HTMLElement, 'gallery.images contains an HTMLElement');
-      done();
-    });
-  });
+        setup(() => {
+          gallery = fixture('gallery');
+        });
 
-});
-</script>
+        teardown(() => {
+          // Reset hash
+          window.history.pushState({}, document.title, window.location.pathname + window.location.search);
+        });
+
+        test('images is an array with an HTMLElement', (done) => {
+          flush(() => {
+            assert.isArray(gallery._images, 'gallery._images is an array');
+            assert.isTrue(gallery._images[0] instanceof HTMLElement, 'gallery._images contains an HTMLElement');
+            done();
+          });
+        });
+
+        test('image elements are properly observed', (done) => {
+          flush(() => {
+            const _images = gallery._images;
+            assert.equal(gallery.firstElementChild, _images[0]);
+            assert.equal(gallery.lastElementChild, _images[_images.length - 1]);
+            done();
+          });
+        });
+
+        test('slideshow hidden on load', () => {
+          assert.isTrue(gallery.slideshow.hidden, 'slideshow is hidden');
+          assert.isFalse(gallery.slideshow.opened, 'slideshow is not opened');
+        });
+
+        test('slideshow opens on hash change', (done) => {
+          window.location.hash = '/i/3';
+          flush(() => {
+            assert.isFalse(gallery.slideshow.hidden, 'slideshow is not hidden');
+            assert.isTrue(gallery.slideshow.opened, 'slideshow is opened');
+            done();
+          });
+        });
+
+        test('slideshow opens on image click', (done) => {
+          flush(() => {
+            gallery.firstElementChild.click();
+            flush(() => {
+              assert.isFalse(gallery.slideshow.hidden, 'slideshow is not hidden');
+              assert.isTrue(gallery.slideshow.opened, 'slideshow is opened');
+              done();
+            });
+          });
+        });
+
+        test('slideshow gets focus when opened', (done) => {
+          gallery.slideshow.opened = true;
+          flush(() => {
+            gallery.slideshow === document.activeElement;
+            done();
+          });
+        });
+
+      });
+    </script>
 
   </body>
 </html>
