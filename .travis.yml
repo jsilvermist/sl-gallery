@@ -1,0 +1,17 @@
+language: node_js
+node_js: stable
+dist: trusty
+sudo: required
+addons:
+  firefox: latest
+  chrome: stable
+cache:
+  directories:
+    - node_modules
+install:
+  - npm install -g polymer-cli
+  - npm install
+before_script:
+  - npm run lint
+script:
+  - xvfb-run npm run test
