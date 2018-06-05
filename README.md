@@ -1,7 +1,9 @@
 Silverlinkz Photo Gallery
 =========================
 
-[![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg?style=flat-square)](https://www.webcomponents.org/element/jsilvermist/sl-gallery)
+[![Build Status](https://travis-ci.org/jsilvermist/sl-gallery.svg?branch=master)](https://travis-ci.org/jsilvermist/sl-gallery)
+[![Published on npm](https://img.shields.io/npm/v/@silverlinkz/sl-gallery.svg)](https://www.npmjs.com/package/@silverlinkz/sl-gallery)
+[![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/jsilvermist/sl-gallery)
 
 A Polymer hash-route based photo gallery.
 
