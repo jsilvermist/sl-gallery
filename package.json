@@ -3,6 +3,9 @@
   "description": "A Polymer hash-route based photo gallery.",
   "version": "2.1.0",
   "main": "sl-gallery.js",
+  "files": [
+    "sl-gallery*.js"
+  ],
   "scripts": {
     "lint": "polymer lint",
     "start": "polymer serve",
