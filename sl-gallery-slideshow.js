@@ -373,7 +373,7 @@ class SLGallerySlideshow extends PolymerElement {
 
   _activeImageIndexChanged(index) {
     // Exit if gallery not active, no images in gallery, or index is undefined
-    if (!this.gallery.active || !(this.gallery._route && this.gallery._route.active) ||
+    if (!this.gallery.active || this.gallery._activeIndex === null ||
         !this.gallery._images || index === undefined) {
       return;
     }

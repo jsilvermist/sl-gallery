@@ -63,12 +63,12 @@ class SLGallery extends PolymerElement {
         }
       </style>
 
-      <!-- Workaround for not being able to set "prefix" without a binding -->
-      <span hidden>{{prefix}}</span>
-
       <div class="image-grid" on-click="_handleGridClicked">
         <slot></slot>
       </div>
+
+      <!-- Workaround for not being able to set "prefix" without a binding -->
+      <span style="display: none;">{{prefix}}</span>
     `;
   }
 
@@ -85,19 +85,16 @@ class SLGallery extends PolymerElement {
         type: String,
         value: 'i',
       },
+      _activeIndex: {
+        type: Number,
+        value: null,
+        observer: '_activeIndexChanged',
+      },
       _images: {
         type: Array,
         observer: '_imagesChanged',
       },
-      _route: Object,
     };
-  }
-
-  static get observers() {
-    return [
-      '_routeActiveChanged(_route.active)',
-      '_routeIndexChanged(_route.index)',
-    ];
   }
 
   constructor() {
@@ -142,20 +139,16 @@ class SLGallery extends PolymerElement {
 
   _updateRoute() {
     const hash = window.location.hash;
-    const route = {
-      active: false,
-      index: null,
-    };
+    let routeIndex = null;
 
     if (hash && hash.substr(1, 1) === '/') {
       const [, prefix, index] = hash.split('/');
       if (prefix && prefix === this.prefix && index !== undefined) {
-        route.active = true;
-        route.index = +index;
+        routeIndex = +index;
       }
     }
 
-    this._route = route;
+    this._activeIndex = routeIndex;
   }
 
   _resetRoute() {
@@ -176,33 +169,28 @@ class SLGallery extends PolymerElement {
       image.index = i;
     });
 
-    // Manually call changed methods when images change to update routes
+    // Manually call index changed when images change to update routes
     // [TODO]: Refactor so this is no longer necessary
-    this._activeChanged();
+    this._activeIndexChanged(this._activeIndex);
   }
 
   _activeChanged(active, old) {
-    // Manually call changed methods when active changes to update routes
-    // [TODO]: Refactor so this is no longer necessary
+    // Return on first call to prevent duplicate method calls
     if (active !== undefined && old === undefined) return;
-    this._routeActiveChanged(this._route.active);
-    this._routeIndexChanged(this._route.index);
+
+    // Manually call index changed when active changes to update routes
+    // [TODO]: Refactor so this is no longer necessary
+    this._activeIndexChanged(this._activeIndex);
   }
 
-  _routeActiveChanged(routeActive) {
+  _activeIndexChanged(index) {
     // [TODO]: Should reflect state to slideshow and handle view from slideshow.active
-    if (this.active && routeActive && this._images && this._images[this._route.index]) {
+    if (this.active && index !== null && this._images && this._images[index]) {
       this.slideshow.opened = true;
+      this.slideshow.activeImage = this._images[index];
     } else {
       this.slideshow.opened = false;
-    }
-  }
-
-  _routeIndexChanged(routeIndex) {
-    if (!this.active || !this._route.active || !this._images) {
       this.slideshow.activeImage = undefined;
-    } else {
-      this.slideshow.activeImage = this._images[routeIndex];
     }
   }
 }
