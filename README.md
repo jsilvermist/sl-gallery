@@ -5,9 +5,18 @@ Silverlinkz Photo Gallery
 [![Published on npm](https://img.shields.io/npm/v/@silverlinkz/sl-gallery.svg)](https://www.npmjs.com/package/@silverlinkz/sl-gallery)
 [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/jsilvermist/sl-gallery)
 
-A Polymer hash-route based photo gallery.
+A web-component based hash-route photo gallery.
 
-Note: Fullscreen won't work on `webcomponents.org` due to being inside of a fullscreen restricted iframe.
+The gallery will load all `small` images for thumbnails in the grid.
+
+When you open the fullscreen slideshow, it will display the small image
+as a placeholder while loading the larger full-sized `src` image.
+
+After the current image in the slideshow is loaded, the next and previous images
+will be lazy-loaded so that they are immediately ready upon changing image.
+
+Note: Fullscreen won't work in the demo at `webcomponents.org`
+due to being inside of a fullscreen restricted iframe.
 
 ## Installation
 
@@ -66,4 +75,4 @@ Create an `sl-gallery` element, and add `sl-gallery-image` elements for each ima
 The `small` attribute is used for the thumbnail image and preloading the gallery slideshow image.
 If the `small` attribute is missing, the gallery will use the `src` for the thumbnail image.
 
-You can leave out the `title`, `caption`, and `small` attributes, or even lazy-load the `src` attribute.
+The `title`, `caption`, and `small` attributes are optional, and you can also set the `src` attribute dynamically.
