@@ -373,7 +373,7 @@ class SLGallerySlideshow extends PolymerElement {
 
   _activeImageIndexChanged(index) {
     // Exit if gallery not active, no images in gallery, or index is undefined
-    if (!this.gallery.active || !this.gallery._routeActive ||
+    if (!this.gallery.active || !(this.gallery._route && this.gallery._route.active) ||
         !this.gallery._images || index === undefined) {
       return;
     }
@@ -494,12 +494,7 @@ class SLGallerySlideshow extends PolymerElement {
   }
 
   _closeSlideshow(event) {
-    window.history.pushState({}, document.title,
-        window.location.pathname + window.location.search);
-    window.dispatchEvent(new CustomEvent('location-changed'));
-
-    // [TODO]: This can be removed after upstream change to reset route data
-    this.gallery._routeData = {};
+    this.gallery._resetRoute();
 
     this._exitFullscreen();
 

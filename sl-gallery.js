@@ -11,10 +11,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
 import { FlattenedNodesObserver } from '@polymer/polymer/lib/utils/flattened-nodes-observer.js';
 
-// [TODO]: Remove app-route routing, use simple hash-based system
-import '@polymer/app-route/app-location.js';
-import '@polymer/app-route/app-route.js';
-
 import './sl-gallery-image.js';
 import './sl-gallery-slideshow.js';
 
@@ -67,17 +63,8 @@ class SLGallery extends PolymerElement {
         }
       </style>
 
-      <app-location
-          route="{{_route}}"
-          use-hash-as-path>
-      </app-location>
-
-      <app-route
-          route="{{_route}}"
-          pattern="/[[prefix]]/:index"
-          data="{{_routeData}}"
-          active="{{_routeActive}}">
-      </app-route>
+      <!-- Workaround for not being able to set "prefix" without a binding -->
+      <span hidden>{{prefix}}</span>
 
       <div class="image-grid" on-click="_handleGridClicked">
         <slot></slot>
@@ -103,15 +90,13 @@ class SLGallery extends PolymerElement {
         observer: '_imagesChanged',
       },
       _route: Object,
-      _routeData: Object,
-      _routeActive: Boolean,
     };
   }
 
   static get observers() {
     return [
-      '_routeActiveChanged(_routeActive)',
-      '_routeIndexChanged(_routeData.index)',
+      '_routeActiveChanged(_route.active)',
+      '_routeIndexChanged(_route.index)',
     ];
   }
 
@@ -134,6 +119,11 @@ class SLGallery extends PolymerElement {
   connectedCallback() {
     super.connectedCallback();
 
+    // Initialize hash route and listen for changes
+    this._updateRoute = this._updateRoute.bind(this);
+    window.addEventListener('hashchange', this._updateRoute);
+    this._updateRoute();
+
     // Create observer to watch for new nodes added from light dom
     this._observer = new FlattenedNodesObserver(this, (info) => {
       this._images = [...info.target.children];
@@ -143,8 +133,35 @@ class SLGallery extends PolymerElement {
   disconnectedCallback() {
     super.disconnectedCallback();
 
-    // Remove observer when disconnected
+    // Remove listeners
+    window.removeEventListener('hashchange', this._updateRoute);
+
+    // Disconnect flattened nodes observer
     this._observer.disconnect();
+  }
+
+  _updateRoute() {
+    const hash = window.location.hash;
+    const route = {
+      active: false,
+      index: null,
+    };
+
+    if (hash && hash.substr(1, 1) === '/') {
+      const [, prefix, index] = hash.split('/');
+      if (prefix && prefix === this.prefix && index !== undefined) {
+        route.active = true;
+        route.index = +index;
+      }
+    }
+
+    this._route = route;
+  }
+
+  _resetRoute() {
+    window.history.pushState(null, document.title,
+        window.location.pathname + window.location.search);
+    this._updateRoute();
   }
 
   _handleGridClicked(event) {
@@ -168,13 +185,13 @@ class SLGallery extends PolymerElement {
     // Manually call changed methods when active changes to update routes
     // [TODO]: Refactor so this is no longer necessary
     if (active !== undefined && old === undefined) return;
-    this._routeActiveChanged(this._routeActive);
-    this._routeIndexChanged(this._routeData.index);
+    this._routeActiveChanged(this._route.active);
+    this._routeIndexChanged(this._route.index);
   }
 
   _routeActiveChanged(routeActive) {
     // [TODO]: Should reflect state to slideshow and handle view from slideshow.active
-    if (this.active && routeActive && this._images && this._images[this._routeData.index]) {
+    if (this.active && routeActive && this._images && this._images[this._route.index]) {
       this.slideshow.opened = true;
     } else {
       this.slideshow.opened = false;
@@ -182,7 +199,7 @@ class SLGallery extends PolymerElement {
   }
 
   _routeIndexChanged(routeIndex) {
-    if (!this.active || !this._routeActive || !this._images) {
+    if (!this.active || !this._route.active || !this._images) {
       this.slideshow.activeImage = undefined;
     } else {
       this.slideshow.activeImage = this._images[routeIndex];

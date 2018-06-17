@@ -53,7 +53,7 @@
 
         teardown(() => {
           // Reset hash
-          window.history.pushState({}, document.title, window.location.pathname + window.location.search);
+          window.history.pushState(null, document.title, window.location.pathname + window.location.search);
         });
 
         test('images is an array with an HTMLElement', (done) => {

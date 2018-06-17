@@ -27,7 +27,6 @@
   "dependencies": {
     "@jsilvermist/fullscreen-api": "^0.2.0",
     "@polymer/app-layout": "^3.0.0-pre.18",
-    "@polymer/app-route": "^3.0.0-pre.18",
     "@polymer/iron-iconset-svg": "^3.0.0-pre.18",
     "@polymer/iron-image": "^3.0.0-pre.18",
     "@polymer/paper-icon-button": "^3.0.0-pre.18",
