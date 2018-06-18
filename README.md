@@ -18,18 +18,30 @@ will be lazy-loaded so that they are immediately ready upon changing image.
 Note: Fullscreen won't work in the demo at `webcomponents.org`
 due to being inside of a fullscreen restricted iframe.
 
-## Installation
+## Installation (Polymer 3)
 
 ```sh
 npm install --save @silverlinkz/sl-gallery
 ```
 
+### Legacy Installation (Polymer 2 / Bower)
+
+```sh
+bower install --save jsilvermist/sl-gallery#^1.0.0
+```
+
 ## Usage
 
-Import the gallery:
+Import the gallery (Polymer 3):
 
 ```javascript
 import '@silverlinkz/sl-gallery';
+```
+
+Legacy import (Polymer 2 / Bower):
+
+```html
+<link rel="import" href="bower_components/sl-gallery/sl-gallery.html">
 ```
 
 Create an `sl-gallery` element, and add `sl-gallery-image` elements for each image:
