@@ -175,6 +175,9 @@ class SLGallery extends PolymerElement {
   }
 
   _activeChanged(active, old) {
+    // Reflect active state to slideshow
+    this.slideshow.active = active;
+
     // Return on first call to prevent duplicate method calls
     if (active !== undefined && old === undefined) return;
 

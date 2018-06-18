@@ -263,6 +263,11 @@ class SLGallerySlideshow extends PolymerElement {
 
   static get properties() {
     return {
+      active: {
+        type: Boolean,
+        value: true,
+        observer: '_activeChanged',
+      },
       activeImage: {
         type: Object,
         value: function() {
@@ -373,7 +378,7 @@ class SLGallerySlideshow extends PolymerElement {
 
   _activeImageIndexChanged(index) {
     // Exit if gallery not active, no images in gallery, or index is undefined
-    if (!this.gallery.active || this.gallery._activeIndex === null ||
+    if (!this.active || this.gallery._activeIndex === null ||
         !this.gallery._images || index === undefined) {
       return;
     }
@@ -511,6 +516,10 @@ class SLGallerySlideshow extends PolymerElement {
       parrent.removeChild(el);
       setTimeout(() => parrent.insertBefore(el, sibling), 0);
     }
+  }
+
+  _activeChanged() {
+    // handle active changed
   }
 
   _openedChanged(opened) {
