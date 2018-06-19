@@ -18,7 +18,9 @@
   "keywords": [
     "gallery",
     "images",
+    "lazy-load",
     "polymer",
+    "prpl",
     "web-component"
   ],
   "author": "Jsilvermist <jsilvermist@silverlinkz.net> (https://silverlinkz.net)",
