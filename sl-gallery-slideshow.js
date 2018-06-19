@@ -213,7 +213,7 @@ class SLGallerySlideshow extends PolymerElement {
           <paper-icon-button
               id="toolbarCloseSlideshow"
               icon="sl-gallery:close"
-              on-click="_closeSlideshow">
+              on-click="_resetSlideshow">
           </paper-icon-button>
         </app-toolbar>
 
@@ -224,15 +224,15 @@ class SLGallerySlideshow extends PolymerElement {
         <paper-icon-button
             id="closeSlideshow"
             icon="sl-gallery:close"
-            on-click="_closeSlideshow">
+            on-click="_resetSlideshow">
         </paper-icon-button>
 
         <div id="clickBlocks">
           <div id="toggleToolbar" on-click="_toggleToolbar"></div>
-          <div id="previousImageBlock" on-click="_previousImage">
+          <div id="previousImageBlock" on-click="_navigateToPreviousImage">
             <paper-icon-button icon="sl-gallery:chevron-left"></paper-icon-button>
           </div>
-          <div id="nextImageBlock" on-click="_nextImage">
+          <div id="nextImageBlock" on-click="_navigateToNextImage">
             <paper-icon-button icon="sl-gallery:chevron-right"></paper-icon-button>
           </div>
         </div>
@@ -268,22 +268,17 @@ class SLGallerySlideshow extends PolymerElement {
         value: true,
         observer: '_activeChanged',
       },
-      activeImage: {
-        type: Object,
-        value: function() {
-          return {};
-        }
-      },
-      opened: {
-        type: Boolean,
-        value: false,
-        observer: '_openedChanged',
-      },
+      activeImage: Object,
       _imageError: String,
       _imageLoaded: Boolean,
       _imageSrc: String,
       _imageSmall: String,
       _isTouch: Boolean,
+      _opened: {
+        type: Boolean,
+        value: false,
+        observer: '_openedChanged',
+      },
       _spinnerActive: Boolean,
       _toolbarVisible: Boolean,
     };
@@ -312,7 +307,7 @@ class SLGallerySlideshow extends PolymerElement {
     this._ensureAttribute('tabindex', 0);
 
     // Sets #overlay[hover-enabled]
-    this._isTouch = ("ontouchstart" in window) &&
+    this._isTouch = ('ontouchstart' in window) &&
                    (window.navigator.maxTouchPoints > 0 ||
                     window.navigator.msMaxTouchPoints > 0);
 
@@ -344,13 +339,13 @@ class SLGallerySlideshow extends PolymerElement {
     if (event.keyCode === 27) { // ESC
 
       if (!this._exitFullscreen()) {
-        this._closeSlideshow();
+        this._resetSlideshow();
       }
 
     } else if (event.keyCode === 37) { // LEFT
 
       event.preventDefault();
-      this._previousImage();
+      this._navigateToPreviousImage();
 
     } else if (event.keyCode === 38) { // UP
 
@@ -359,7 +354,7 @@ class SLGallerySlideshow extends PolymerElement {
     } else if (event.keyCode === 39) { // RIGHT
 
       event.preventDefault();
-      this._nextImage();
+      this._navigateToNextImage();
 
     } else if (event.keyCode === 40) { // DOWN
 
@@ -377,22 +372,20 @@ class SLGallerySlideshow extends PolymerElement {
   }
 
   _activeImageIndexChanged(index) {
-    // Exit if gallery not active, no images in gallery, or index is undefined
-    if (!this.active || this.gallery._activeIndex === null ||
-        !this.gallery._images || index === undefined) {
+    // Exit if not active, or if index is undefined
+    if (!this.active || index === undefined) {
+      this._opened = false;
       return;
     }
 
-    // If no valid image index set, reset image and close slideshow
-    if (index === '' || isNaN(index) || index < 0 || index >= this.gallery._images.length) {
-      this._closeSlideshow();
-      return;
-    }
+    // Open slideshow
+    this._opened = true;
 
-    // Ensure slideshow is open in case of outdated bookmark or link to non-valid index.
-    // [TODO]: Is this still needed?
-    this.opened = true;
+    // Update slideshow image, overlay, and buttons
+    this._updateView();
+  }
 
+  _updateView() {
     // Load the image in iron-image
     this._imageSmall = this.activeImage.small;
     this._imageSrc = this.activeImage.src;
@@ -415,54 +408,82 @@ class SLGallerySlideshow extends PolymerElement {
     }
   }
 
+  _resetSlideshow(event) {
+    this.gallery._resetRoute();
+
+    this._exitFullscreen();
+
+    this._imageSmall = '';
+    this._imageSrc = '';
+
+    this._spinnerActive = false;
+
+    // Prevent hover state from persisting after click
+    if (event) {
+      const el = event.currentTarget;
+      const parrent = el.parentNode;
+      const sibling = el.nextSibling;
+      parrent.removeChild(el);
+      window.requestAnimationFrame(() => parrent.insertBefore(el, sibling));
+    }
+  }
+
   _preloadImage(image) {
     if (!image.loaded) {
       const imgNode = new Image();
       imgNode.src = image.src;
-      imgNode.onload = function(event) {
+      imgNode.onload = function() {
         image.reference = this;
         image.loaded = true;
       }
     }
   }
 
+  _preloadAdjoiningImages() {
+    const images = this.gallery._images;
+
+    // Preload previous image if not loaded
+    if (this.hasPreviousImage) {
+      this._preloadImage(images[+this.activeImage.index-1]);
+    }
+
+    // Preload next image if not loaded
+    if (this.hasNextImage) {
+      this._preloadImage(images[+this.activeImage.index+1]);
+    }
+  }
+
   _imageLoadedChanged(loaded) {
     if (loaded) {
-      const images = this.gallery._images;
-
       this._spinnerActive = false;
 
-      if (!this.activeImage.loaded) {
-        this.activeImage.reference = this.$.image.shadowRoot.querySelector('img');
-        this.activeImage.loaded = true;
-      }
-
-      // Preload previous image if not loaded
-      if (this.hasPreviousImage) {
-        this._preloadImage(images[+this.activeImage.index-1]);
-      }
-
-      // Preload next image if not loaded
-      if (this.hasNextImage) {
-        this._preloadImage(images[+this.activeImage.index+1]);
+      // activeImage could be undefined if the image takes too long to load
+      if (this.activeImage) {
+        if (!this.activeImage.loaded) {
+          this.activeImage.reference = this.$.image.shadowRoot.querySelector('img');
+          this.activeImage.loaded = true;
+        }
+        this._preloadAdjoiningImages();
       }
     }
   }
 
   _imageErrorChanged(error) {
     if (error) {
-      // [TODO]: Implement listener, toast, or other messaging system
-      window.dispatchEvent(new CustomEvent('notify', {detail: 'Error loading image...'}));
+      // Dispatch event upon error while loading an image
+      this.gallery.dispatchEvent(new CustomEvent('error', {
+        detail: { error: 'Error loading image...' },
+      }));
     }
   }
 
-  _previousImage() {
+  _navigateToPreviousImage() {
     if (this.hasPreviousImage) {
       window.location.hash = `/${this.gallery.prefix}/${+this.activeImage.index-1}`;
     }
   }
 
-  _nextImage() {
+  _navigateToNextImage() {
     if (this.hasNextImage) {
       window.location.hash = `/${this.gallery.prefix}/${+this.activeImage.index+1}`;
     }
@@ -498,30 +519,6 @@ class SLGallerySlideshow extends PolymerElement {
     }
   }
 
-  _closeSlideshow(event) {
-    this.gallery._resetRoute();
-
-    this._exitFullscreen();
-
-    this._imageSmall = '';
-    this._imageSrc = '';
-
-    this._spinnerActive = false;
-
-    // Prevent hover state from persisting after click
-    if (event) {
-      const el = event.currentTarget;
-      const parrent = el.parentNode;
-      const sibling = el.nextSibling;
-      parrent.removeChild(el);
-      setTimeout(() => parrent.insertBefore(el, sibling), 0);
-    }
-  }
-
-  _activeChanged() {
-    // handle active changed
-  }
-
   _openedChanged(opened) {
     if (opened) {
       document.body.style.overflow = 'hidden';
@@ -531,6 +528,16 @@ class SLGallerySlideshow extends PolymerElement {
     } else {
       document.body.style.overflow = '';
       this.hidden = true;
+      this.blur();
+    }
+  }
+
+  _activeChanged(active) {
+    if (active && this.activeImage && this.activeImage.index !== undefined) {
+      this._opened = true;
+      this._updateView();
+    } else {
+      this._opened = false;
     }
   }
 }

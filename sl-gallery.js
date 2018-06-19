@@ -142,9 +142,12 @@ class SLGallery extends PolymerElement {
     let routeIndex = null;
 
     if (hash && hash.substr(1, 1) === '/') {
-      const [, prefix, index] = hash.split('/');
-      if (prefix && prefix === this.prefix && index !== undefined) {
-        routeIndex = +index;
+      const [, prefix, rawIndex] = hash.split('/');
+      if (prefix && prefix === this.prefix) {
+        const index = parseInt(rawIndex);
+        if (!isNaN(index)) {
+          routeIndex = index;
+        }
       }
     }
 
@@ -174,25 +177,16 @@ class SLGallery extends PolymerElement {
     this._activeIndexChanged(this._activeIndex);
   }
 
-  _activeChanged(active, old) {
+  _activeChanged(active) {
     // Reflect active state to slideshow
     this.slideshow.active = active;
-
-    // Return on first call to prevent duplicate method calls
-    if (active !== undefined && old === undefined) return;
-
-    // Manually call index changed when active changes to update routes
-    // [TODO]: Refactor so this is no longer necessary
-    this._activeIndexChanged(this._activeIndex);
   }
 
   _activeIndexChanged(index) {
     // [TODO]: Should reflect state to slideshow and handle view from slideshow.active
-    if (this.active && index !== null && this._images && this._images[index]) {
-      this.slideshow.opened = true;
+    if (index !== null && this._images && this._images[index]) {
       this.slideshow.activeImage = this._images[index];
     } else {
-      this.slideshow.opened = false;
       this.slideshow.activeImage = undefined;
     }
   }

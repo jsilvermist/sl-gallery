@@ -40,6 +40,18 @@
       </template>
     </test-fixture>
 
+    <test-fixture id="prefixed-gallery">
+      <template>
+        <sl-gallery prefix="prefixed">
+          <sl-gallery-image
+              src="https://unsplash.it/800/500/?image=202"
+              small="https://unsplash.it/400/250/?image=202"
+              title="Inside a prefix other than 'i'"
+          ></sl-gallery-image>
+        </sl-gallery>
+      </template>
+    </test-fixture>
+
     <script type="module">
       import '../sl-gallery.js';
 
@@ -54,12 +66,17 @@
         teardown(() => {
           // Reset hash
           window.history.pushState(null, document.title, window.location.pathname + window.location.search);
+
+          // Reset focused element
+          document.activeElement.blur();
         });
 
-        test('images is an array with an HTMLElement', (done) => {
+        test('_images is an array with all HTMLElements', (done) => {
           flush(() => {
             assert.isArray(gallery._images, 'gallery._images is an array');
-            assert.isTrue(gallery._images[0] instanceof HTMLElement, 'gallery._images contains an HTMLElement');
+            gallery._images.forEach((image) => {
+              assert.isTrue(image instanceof HTMLElement, 'images are HTMLElements');
+            });
             done();
           });
         });
@@ -73,37 +90,99 @@
           });
         });
 
-        test('slideshow hidden on load', () => {
-          assert.isTrue(gallery.slideshow.hidden, 'slideshow is hidden');
-          assert.isFalse(gallery.slideshow.opened, 'slideshow is not opened');
-        });
-
-        test('slideshow opens on hash change', (done) => {
-          window.location.hash = '/i/3';
+        test('route updates index and slideshow.activeImage', (done) => {
           flush(() => {
-            assert.isFalse(gallery.slideshow.hidden, 'slideshow is not hidden');
-            assert.isTrue(gallery.slideshow.opened, 'slideshow is opened');
-            done();
+            assert.isNull(gallery._activeIndex, '_activeIndex is null');
+            assert.isUndefined(gallery.slideshow.activeImage, 'slideshow.activeImage undefined');
+            window.location.hash = '/i/not-a-num';
+            flush(() => {
+              assert.isNull(gallery._activeIndex, '_activeIndex is null');
+              assert.isUndefined(gallery.slideshow.activeImage, 'slideshow.activeImage undefined');
+              const numberNotInArray = 55;
+              window.location.hash = '/i/' + numberNotInArray.toString();
+              flush(() => {
+                assert.equal(gallery._activeIndex, numberNotInArray, '_activeIndex matches hash index');
+                assert.isUndefined(gallery.slideshow.activeImage, 'slideshow.activeImage undefined');
+                const numberInArray = 0;
+                window.location.hash = '/i/' + numberInArray.toString();
+                flush(() => {
+                  assert.equal(gallery._activeIndex, numberInArray, '_activeIndex matches hash index');
+                  assert.equal(gallery.slideshow.activeImage, gallery._images[numberInArray], 'slideshow.activeImage is first node');
+                  done();
+                });
+              });
+            });
           });
         });
 
-        test('slideshow opens on image click', (done) => {
+        test('hash prefix is respected', (done) => {
+          const prefixedGallery = fixture('prefixed-gallery');
+          window.location.hash = '/i/0';
           flush(() => {
-            gallery.firstElementChild.click();
+            assert.equal(gallery.slideshow.activeImage, gallery._images[0]);
+            assert.isUndefined(prefixedGallery.slideshow.activeImage);
+            window.location.hash = '/prefixed/0';
             flush(() => {
-              assert.isFalse(gallery.slideshow.hidden, 'slideshow is not hidden');
-              assert.isTrue(gallery.slideshow.opened, 'slideshow is opened');
+              assert.equal(prefixedGallery.slideshow.activeImage, prefixedGallery._images[0]);
+              assert.isUndefined(gallery.slideshow.activeImage);
               done();
             });
           });
         });
 
-        test('slideshow gets focus when opened', (done) => {
-          gallery.slideshow.opened = true;
-          flush(() => {
-            gallery.slideshow === document.activeElement;
-            done();
+        suite('slideshow', () => {
+
+          test('hidden on load', (done) => {
+            flush(() => {
+              assert.isTrue(gallery.slideshow.hidden, 'slideshow is hidden');
+              assert.isFalse(gallery.slideshow._opened, 'slideshow is not opened');
+              done();
+            });
           });
+
+          test('opens on hash change', (done) => {
+            window.location.hash = '/i/3';
+            flush(() => {
+              assert.isFalse(gallery.slideshow.hidden, 'slideshow is not hidden');
+              assert.isTrue(gallery.slideshow._opened, 'slideshow is opened');
+              done();
+            });
+          });
+
+          test('opens on image click', (done) => {
+            flush(() => {
+              gallery.firstElementChild.click();
+              flush(() => {
+                assert.isFalse(gallery.slideshow.hidden, 'slideshow is not hidden');
+                assert.isTrue(gallery.slideshow._opened, 'slideshow is opened');
+                done();
+              });
+            });
+          });
+
+          test('focused when opened', (done) => {
+            gallery.slideshow._opened = true;
+            flush(() => {
+              assert.equal(gallery.slideshow, document.activeElement);
+              done();
+            });
+          });
+
+          test('active change is properly observed', (done) => {
+            gallery.active = false;
+            window.location.hash = '/i/0';
+            flush(() => {
+              assert.isTrue(gallery.slideshow.hidden, 'slideshow is hidden');
+              assert.isFalse(gallery.slideshow._opened, 'slideshow is not opened');
+              gallery.active = true;
+              flush(() => {
+                assert.isFalse(gallery.slideshow.hidden, 'slideshow is hidden');
+                assert.isTrue(gallery.slideshow._opened, 'slideshow is not opened');
+                done();
+              });
+            });
+          });
+
         });
 
       });
