@@ -16,7 +16,8 @@ import './sl-gallery-slideshow.js';
 
 /**
  * Silverlinkz Photo Gallery
- * A Polymer hash-route based photo gallery.
+ *
+ * A web-component based hash-route photo gallery.
  *
  * @customElement
  * @polymer
