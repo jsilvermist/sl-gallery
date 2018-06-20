@@ -66,8 +66,8 @@ class SLGallerySlideshow extends PolymerElement {
             id="image"
             src="[[_imageSrc]]"
             alt=""
-            preload=""
-            fade=""
+            preload
+            fade
             sizing="contain"
             placeholder="[[_imageSmall]]"
             loaded="{{_imageLoaded}}"

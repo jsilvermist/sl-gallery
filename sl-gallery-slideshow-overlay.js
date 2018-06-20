@@ -163,7 +163,7 @@ class SLGallerySlideshowOverlay extends PolymerElement {
 
       <!-- Default View -->
       <app-toolbar class="header">
-        <div main-title="">[[activeImage.title]]</div>
+        <div main-title>[[activeImage.title]]</div>
         <paper-icon-button
             id="toggleFullscreen"
             icon="sl-gallery:fullscreen"
@@ -176,7 +176,7 @@ class SLGallerySlideshowOverlay extends PolymerElement {
         </paper-icon-button>
       </app-toolbar>
       <app-toolbar class="footer" has-caption$="[[activeImage._hasCaption]]">
-        <div main-title="">[[activeImage.caption]]</div>
+        <div main-title>[[activeImage.caption]]</div>
       </app-toolbar>
 
       <!-- Expanded View -->
