@@ -160,14 +160,6 @@ class SLGallerySlideshow extends PolymerElement {
     }
   }
 
-  get hasPreviousImage() {
-    return +this.activeImage.index > 0;
-  }
-
-  get hasNextImage() {
-    return +this.activeImage.index < (this.gallery._images.length-1);
-  }
-
   _activeImageIndexChanged(index) {
     // Exit if not active, or if index is undefined
     if (!this.active || index === undefined) {
@@ -219,13 +211,13 @@ class SLGallerySlideshow extends PolymerElement {
     const images = this.gallery._images;
 
     // Preload previous image if not loaded
-    if (this.hasPreviousImage) {
-      this._preloadImage(images[+this.activeImage.index-1]);
+    if (this.activeImage._hasPreviousImage) {
+      this._preloadImage(images[this.activeImage.index-1]);
     }
 
     // Preload next image if not loaded
-    if (this.hasNextImage) {
-      this._preloadImage(images[+this.activeImage.index+1]);
+    if (this.activeImage._hasNextImage) {
+      this._preloadImage(images[this.activeImage.index+1]);
     }
   }
 
@@ -254,14 +246,14 @@ class SLGallerySlideshow extends PolymerElement {
   }
 
   _navigateToPreviousImage() {
-    if (this.hasPreviousImage) {
-      window.location.hash = `/${this.gallery.prefix}/${+this.activeImage.index-1}`;
+    if (this.activeImage._hasPreviousImage) {
+      window.location.hash = `/${this.gallery.prefix}/${this.activeImage.index-1}`;
     }
   }
 
   _navigateToNextImage() {
-    if (this.hasNextImage) {
-      window.location.hash = `/${this.gallery.prefix}/${+this.activeImage.index+1}`;
+    if (this.activeImage._hasNextImage) {
+      window.location.hash = `/${this.gallery.prefix}/${this.activeImage.index+1}`;
     }
   }
 

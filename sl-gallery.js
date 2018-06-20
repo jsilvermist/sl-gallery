@@ -169,8 +169,10 @@ class SLGallery extends PolymerElement {
 
   _imagesChanged(images) {
     // Give each image an index based on position in array
-    images.forEach((image, i) => {
+    images.forEach((image, i, arr) => {
       image.index = i;
+      image._hasPreviousImage = i > 0;
+      image._hasNextImage = i < (arr.length - 1);
     });
 
     // Manually call index changed when images change to update routes
