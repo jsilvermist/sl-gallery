@@ -20,11 +20,22 @@ class SLGallerySlideshowOverlay extends PolymerElement {
         /* Animations */
 
         app-toolbar,
-        #clickBlocks > div,
+        #listenerBlocks > div,
         paper-icon-button#closeSlideshow {
           will-change: transform, opacity;
           transition: top 0.35s ease, bottom 0.35s ease, right 0.35s ease,
                       opacity 0.35s ease, visibility 0.35s ease;
+        }
+
+        /* @media (hover: hover) in CSS4 */
+        :host([hover-enabled]) paper-icon-button:hover {
+          background: rgba(99, 99, 99, 0.3);
+          border: 1px solid rgba(88, 88, 88, 0.66);
+        }
+
+        :host([hover-enabled]) paper-icon-button:active {
+          background: rgba(0, 0, 0, 0.3);
+          border: 0;
         }
 
         /* Toolbars */
@@ -51,8 +62,8 @@ class SLGallerySlideshowOverlay extends PolymerElement {
           opacity: 0;
           visibility: hidden;
           text-align: center;
-          --app-toolbar-font-size: 14px;
           color: #ddd;
+          --app-toolbar-font-size: 14px;
         }
 
         :host([toolbar-visible]) app-toolbar.header {
@@ -66,21 +77,35 @@ class SLGallerySlideshowOverlay extends PolymerElement {
           visibility: visible;
         }
 
+        /* Listener Overlays */
+
+        #listenerBlocks > div {
+          z-index: 1;
+          position: fixed;
+          top: 0;
+          bottom: 0;
+        }
+
+        #listenerBlocks > div#toggleToolbar {
+          left: 30%;
+          right: 30%;
+          width: 40%;
+        }
+
+        #listenerBlocks > div#previousImageBlock {
+          left: 0;
+          width: 30%;
+        }
+
+        #listenerBlocks > div#nextImageBlock {
+          right: 0;
+          width: 30%;
+        }
+
         /* Buttons */
 
-        /* @media (hover: hover) in CSS4 */
-        :host([hover-enabled]) paper-icon-button:hover {
-          background: rgba(99, 99, 99, 0.3);
-          border: 1px solid rgba(88, 88, 88, 0.66);
-        }
-
-        :host([hover-enabled]) paper-icon-button:active {
-          background: rgba(0, 0, 0, 0.3);
-          border: 0;
-        }
-
-        :host > paper-icon-button,
-        :not(app-toolbar) paper-icon-button {
+        paper-icon-button#closeSlideshow,
+        #listenerBlocks paper-icon-button {
           color: #fff;
           z-index: 2;
           border-radius: 50%;
@@ -101,61 +126,36 @@ class SLGallerySlideshowOverlay extends PolymerElement {
           visibility: hidden;
         }
 
-        #clickBlocks #previousImageBlock paper-icon-button {
+        #listenerBlocks paper-icon-button {
           position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
+        #listenerBlocks #previousImageBlock paper-icon-button {
           left: 8px;
-          top: 50%;
-          transform: translateY(-50%);
         }
 
-        #clickBlocks #nextImageBlock paper-icon-button {
-          position: absolute;
+        #listenerBlocks #nextImageBlock paper-icon-button {
           right: 8px;
-          top: 50%;
-          transform: translateY(-50%);
-        }
-
-        /* Click Blocks */
-
-        #clickBlocks > div {
-          z-index: 1;
-          position: fixed;
-          top: 0;
-          bottom: 0;
-        }
-
-        #clickBlocks > div#toggleToolbar {
-          left: 30%;
-          right: 30%;
-          width: 40%;
-        }
-
-        #clickBlocks > div#previousImageBlock {
-          left: 0;
-          width: 30%;
-        }
-
-        #clickBlocks > div#nextImageBlock {
-          right: 0;
-          width: 30%;
         }
 
         @media (max-width: 600px) {
-          #clickBlocks paper-icon-button {
-            width: 40px;
-            height: 40px;
-          }
-
           paper-icon-button#closeSlideshow {
             top: 5px;
             right: 5px;
           }
 
-          #clickBlocks #previousImageBlock paper-icon-button {
+          #listenerBlocks paper-icon-button {
+            width: 40px;
+            height: 40px;
+          }
+
+          #listenerBlocks #previousImageBlock paper-icon-button {
             left: 5px;
           }
 
-          #clickBlocks #nextImageBlock paper-icon-button {
+          #listenerBlocks #nextImageBlock paper-icon-button {
             right: 5px;
           }
         }
@@ -187,7 +187,7 @@ class SLGallerySlideshowOverlay extends PolymerElement {
       </paper-icon-button>
 
       <!-- Listener Overlays -->
-      <div id="clickBlocks">
+      <div id="listenerBlocks">
         <div id="toggleToolbar" on-click="_toggleToolbar"></div>
         <div id="previousImageBlock" on-click="_navigateToPreviousImage">
           <paper-icon-button icon="sl-gallery:chevron-left"></paper-icon-button>
@@ -207,9 +207,13 @@ class SLGallerySlideshowOverlay extends PolymerElement {
         type: Object,
         observer: '_activeImageChanged',
       },
+      /* Enable hover effects if not using touch */
       hoverEnabled: {
         type: Boolean,
+        value:
+          !('ontouchstart' in window && window.navigator.maxTouchPoints > 0),
         reflectToAttribute: true,
+        readOnly: true,
       },
       toolbarVisible: {
         type: Boolean,
@@ -221,10 +225,6 @@ class SLGallerySlideshowOverlay extends PolymerElement {
 
   constructor() {
     super();
-
-    // Enable hover effects if not using touch
-    this.hoverEnabled = !('ontouchstart' in window &&
-                          window.navigator.maxTouchPoints > 0);
 
     // Bind handlers to `this` to allow easy listener removal
     this._fullscreenChanged = this._fullscreenChanged.bind(this);
