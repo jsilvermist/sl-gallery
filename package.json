@@ -1,7 +1,7 @@
 {
   "name": "@silverlinkz/sl-gallery",
   "description": "A web-component based hash-route photo gallery.",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "main": "sl-gallery.js",
   "files": [
     "sl-gallery*.js"
