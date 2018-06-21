@@ -99,6 +99,16 @@ class SLGalleryImage extends PolymerElement {
 
   _imageChanged(image) {
     this.style.backgroundImage = `url(${image})`;
+    this._getDimensions(image);
+  }
+
+  _getDimensions(src) {
+    const img = new Image();
+    img.onload = () => {
+      this.width = img.width;
+      this.height = img.height;
+    }
+    img.src = src;
   }
 }
 

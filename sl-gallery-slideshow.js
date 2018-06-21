@@ -44,6 +44,19 @@ class SLGallerySlideshow extends PolymerElement {
         .image-container iron-image {
           width: 100vw;
           height: 100vh;
+          will-change: transform;
+        }
+
+        #previousImage {
+          position: absolute;
+          top: 0;
+          left: -100vw;
+        }
+
+        #nextImage {
+          position: absolute;
+          top: 0;
+          right: -100vw;
         }
       </style>
 
@@ -63,6 +76,17 @@ class SLGallerySlideshow extends PolymerElement {
 
       <div class="image-container">
         <iron-image
+            id="previousImage"
+            src="[[activeImage.previousImage.src]]"
+            alt=""
+            preload
+            fade
+            sizing="contain"
+            placeholder="[[activeImage.previousImage.small]]"
+            loaded="{{_imageLoadedOffscreen}}"
+            error="{{_imageError}}">
+        </iron-image>
+        <iron-image
             id="image"
             src="[[_imageSrc]]"
             alt=""
@@ -71,6 +95,17 @@ class SLGallerySlideshow extends PolymerElement {
             sizing="contain"
             placeholder="[[_imageSmall]]"
             loaded="{{_imageLoaded}}"
+            error="{{_imageError}}">
+        </iron-image>
+        <iron-image
+            id="nextImage"
+            src="[[activeImage.nextImage.src]]"
+            alt=""
+            preload
+            fade
+            sizing="contain"
+            placeholder="[[activeImage.nextImage.small]]"
+            loaded="{{_imageLoadedOffscreen}}"
             error="{{_imageError}}">
         </iron-image>
       </div>
@@ -89,6 +124,7 @@ class SLGallerySlideshow extends PolymerElement {
       activeImage: Object,
       _imageError: String,
       _imageLoaded: Boolean,
+      _imageLoadedOffscreen: Boolean,
       _imageSrc: String,
       _imageSmall: String,
       _opened: {
@@ -111,6 +147,20 @@ class SLGallerySlideshow extends PolymerElement {
   constructor() {
     super();
 
+    this._touch = {
+      coordinates: {
+        start: {
+          x: null,
+          y: null,
+        },
+        move: {
+          x: null,
+          y: null,
+        },
+      },
+      startTime: null,
+    };
+
     // Bind handlers to `this` to allow easy listener removal
     this._handleKeydown = this._handleKeydown.bind(this);
   }
@@ -123,6 +173,17 @@ class SLGallerySlideshow extends PolymerElement {
 
     // Handle key presses
     this.addEventListener('keydown', this._handleKeydown);
+
+    // Handle touch
+    this.addEventListener('touchstart', this.handleTouchStart);
+    this.addEventListener('touchmove', this.handleTouchMove);
+    this.addEventListener('touchend', this.handleTouchEnd);
+    window.addEventListener('resize', this.touchOffsetHiddenImages.bind(this));
+
+    // Handle zoom
+    // e.deltaY > 0 == down
+    // e.deltaY < 0 == up
+    // this.addEventListener('wheel', this.handleWheel);
   }
 
   disconnectedCallback() {
@@ -158,6 +219,146 @@ class SLGallerySlideshow extends PolymerElement {
       event.preventDefault();
 
     }
+  }
+
+  handleTouchStart(event) {
+    const { start } = this._touch.coordinates;
+    start.x = event.touches[0].clientX;
+    start.y = event.touches[0].clientY;
+
+    this.touchOffsetHiddenImages();
+
+    this._touch.startTime = performance.now();
+  }
+
+  handleTouchMove(event) {
+    const { start, move } = this._touch.coordinates;
+    if (!start.x || !start.y) return;
+    move.x = event.touches[0].clientX;
+    move.y = event.touches[0].clientY;
+
+    const xDiff = start.x - move.x;
+    const yDiff = start.y - move.y;
+
+    // Scale expiramenting
+    const normalizedXDiff = xDiff < 0 ? -xDiff : xDiff;
+    const scaleInt = 1 + Math.floor(normalizedXDiff / 1000);
+    const scaleDec = this.helperPadString(normalizedXDiff.toString().slice(-3), 3);
+
+    // Movement is larger along the X axis than Y axis
+    if (Math.abs(xDiff) > Math.abs(yDiff)) {
+      if (xDiff >= 0) {
+        // Left swipe
+        if (this.activeImage.nextImage) {
+          this.$.nextImage.style.transform = `translateX(${-xDiff}px)`;
+          this.$.image.style.transform = `translateX(${-xDiff}px)`;
+        } else {
+          this.$.previousImage.style.transform = `translateX(0px)`;
+          this.$.image.style.transform = `translateX(0px) scale(${scaleInt}.${scaleDec})`;
+          this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
+        }
+      } else {
+        // Right swipe
+        if (this.activeImage.previousImage) {
+          this.$.previousImage.style.transform = `translateX(${-xDiff}px)`;
+          this.$.image.style.transform = `translateX(${-xDiff}px)`;
+        } else {
+          this.$.nextImage.style.transform = `translateX(0px)`;
+          this.$.image.style.transform = `translateX(0px) scale(${scaleInt}.${scaleDec})`;
+          this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
+        }
+      }
+    }
+  }
+
+  handleTouchEnd() {
+    const touchEndTime = performance.now();
+    const { start, move } = this._touch.coordinates;
+
+    // Get diff from comparing start against final movement
+    const xDiff = start.x - move.x;
+
+    // Get window size
+    const w = Math.max(document.documentElement.clientWidth,
+      window.innerWidth || 0);
+    const minSwipeDistance = Math.min(Math.max(w/5, 60), 350);
+
+    // If you pass a certain distance or velocity and distance...
+    if (xDiff > w / 4 || (xDiff > minSwipeDistance &&
+        this._touch.startTime < touchEndTime + 175)) {
+      // [TODO]: Transition to next image fast but gracefully
+      this._navigateToNextImage();
+    } else if (xDiff < -(w / 4) || (xDiff < -minSwipeDistance &&
+        this._touch.startTime < touchEndTime + 175)) {
+      // [TODO]: Transition to previous image fast but gracefully
+      this._navigateToPreviousImage();
+    }
+
+    // Reset transforms
+    // [TODO]: Add transition
+    this.$.image.style.transform = `translateX(0)`;
+    this.$.previousImage.style.transform = `translateX(0)`;
+    this.$.nextImage.style.transform = `translateX(0)`;
+  };
+
+  touchOffsetHiddenImages() {
+    if (!this.activeImage) return;
+
+    // Get window size
+    const aW = Math.max(document.documentElement.clientWidth,
+      window.innerWidth || 0);
+    const aH = Math.max(document.documentElement.clientHeight,
+      window.innerHeight || 0);
+
+    // Offset previous image just off the edge of the screen
+    if (this.activeImage.previousImage) {
+      const pW = this.activeImage.previousImage.width;
+      const pH = this.activeImage.previousImage.height;
+      const pBgW = this.touchGetContainImageSize(pW, pH, aW, aH).imageWidth;
+      const pOffset = pBgW + ((aW - pBgW) / 2);
+      this.$.previousImage.style.left = `${-pOffset}px`;
+    } else {
+      this.$.nextImage.style.left = '-100vw';
+    }
+
+    // Offset next image just off the edge of the screen
+    if (this.activeImage.nextImage) {
+      const nW = this.activeImage.nextImage.width;
+      const nH = this.activeImage.nextImage.height;
+      const nBgW = this.touchGetContainImageSize(nW, nH, aW, aH).imageWidth;
+      const nOffset = nBgW + ((aW - nBgW) / 2);
+      this.$.nextImage.style.right = `${-nOffset}px`;
+    } else {
+      this.$.nextImage.style.right = '-100vw';
+    }
+  }
+
+  touchGetContainImageSize(imageWidth, imageHeight, areaWidth, areaHeight) {
+    const imageRatio = imageWidth / imageHeight;
+    if (imageRatio >= 1) {
+      // Landscape
+      imageWidth = areaWidth;
+      imageHeight = imageWidth / imageRatio;
+      if (imageHeight > areaHeight) {
+        imageHeight = areaHeight;
+        imageWidth = areaHeight * imageRatio;
+      }
+    } else {
+      // Portrait
+      imageHeight = areaHeight;
+      imageWidth = imageHeight * imageRatio;
+      if (imageWidth > areaWidth) {
+        imageWidth = areaWidth;
+        imageHeight = areaWidth / imageRatio;
+      }
+    }
+    return { imageWidth, imageHeight };
+  }
+
+  helperPadString(num, size) {
+    const str = num.toString();
+    const zeros = size - str.length;
+    return '0'.repeat(zeros > 0 ? zeros : 0) + str;
   }
 
   _activeImageIndexChanged(index) {
