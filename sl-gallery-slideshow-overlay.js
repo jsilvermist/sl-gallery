@@ -254,14 +254,14 @@ class SLGallerySlideshowOverlay extends PolymerElement {
   _activeImageChanged(activeImage) {
     if (activeImage) {
       // Hide previous button if first image
-      if (activeImage._hasPreviousImage) {
+      if (activeImage.hasPreviousImage) {
         this.$.previousImageBlock.hidden = false;
       } else {
         this.$.previousImageBlock.hidden = true;
       }
 
       // Hide next button if last image
-      if (activeImage._hasNextImage) {
+      if (activeImage.hasNextImage) {
         this.$.nextImageBlock.hidden = false;
       } else {
         this.$.nextImageBlock.hidden = true;

@@ -208,16 +208,14 @@ class SLGallerySlideshow extends PolymerElement {
   }
 
   _preloadAdjoiningImages() {
-    const images = this.gallery._images;
-
     // Preload previous image if not loaded
-    if (this.activeImage._hasPreviousImage) {
-      this._preloadImage(images[this.activeImage.index-1]);
+    if (this.activeImage.hasPreviousImage) {
+      this._preloadImage(this.activeImage.previousImage);
     }
 
     // Preload next image if not loaded
-    if (this.activeImage._hasNextImage) {
-      this._preloadImage(images[this.activeImage.index+1]);
+    if (this.activeImage.hasNextImage) {
+      this._preloadImage(this.activeImage.nextImage);
     }
   }
 
@@ -246,14 +244,16 @@ class SLGallerySlideshow extends PolymerElement {
   }
 
   _navigateToPreviousImage() {
-    if (this.activeImage._hasPreviousImage) {
-      window.location.hash = `/${this.gallery.prefix}/${this.activeImage.index-1}`;
+    if (this.activeImage.hasPreviousImage) {
+      window.location.hash =
+        `/${this.gallery.prefix}/${this.activeImage.previousImage.index}`;
     }
   }
 
   _navigateToNextImage() {
-    if (this.activeImage._hasNextImage) {
-      window.location.hash = `/${this.gallery.prefix}/${this.activeImage.index+1}`;
+    if (this.activeImage.hasNextImage) {
+      window.location.hash =
+        `/${this.gallery.prefix}/${this.activeImage.nextImage.index}`;
     }
   }
 
