@@ -165,7 +165,7 @@ class SLGallerySlideshowOverlay extends PolymerElement {
       <app-toolbar class="header">
         <div main-title>[[activeImage.title]]</div>
         <paper-icon-button
-            id="toggleFullscreen"
+            id="fullscreenToggle"
             icon="sl-gallery:fullscreen"
             on-click="_toggleFullscreen">
         </paper-icon-button>
@@ -233,14 +233,12 @@ class SLGallerySlideshowOverlay extends PolymerElement {
   connectedCallback() {
     super.connectedCallback();
 
-    this._slideshow = this.parentNode.host;
-
     if (fullscreen.enabled) {
       // Listen for entering/exiting fullscreen
       fullscreen.addListener('change', this._fullscreenChanged);
     } else {
       // Remove fullscreen button if not supported
-      this.$.toggleFullscreen.parentNode.removeChild(this.$.toggleFullscreen);
+      this.$.fullscreenToggle.parentNode.removeChild(this.$.fullscreenToggle);
     }
   }
 
@@ -272,10 +270,11 @@ class SLGallerySlideshowOverlay extends PolymerElement {
   }
 
   _fullscreenChanged() {
-    if (fullscreen.element === this._slideshow) {
-      this.$.toggleFullscreen.icon = 'sl-gallery:fullscreen-exit';
+    // Compare current fullscreen element against slideshow
+    if (fullscreen.element === this.parentNode.host) {
+      this.$.fullscreenToggle.icon = 'sl-gallery:fullscreen-exit';
     } else {
-      this.$.toggleFullscreen.icon = 'sl-gallery:fullscreen';
+      this.$.fullscreenToggle.icon = 'sl-gallery:fullscreen';
     }
   }
 

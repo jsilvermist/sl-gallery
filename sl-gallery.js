@@ -101,7 +101,9 @@ class SLGallery extends PolymerElement {
   constructor() {
     super();
 
-    // Create slideshow element, keep handle as this.slideshow
+    // Create slideshow element, keep handle as this.slideshow.
+    // It is appended to body to escape the stacking context
+    // until we have widespread support for the `dialog` element.
     this.slideshow = document.createElement('sl-gallery-slideshow');
 
     // Create reference to local scope in slideshow
@@ -176,7 +178,6 @@ class SLGallery extends PolymerElement {
     });
 
     // Manually call index changed when images change to update routes
-    // [TODO]: Refactor so this is no longer necessary
     this._activeIndexChanged(this._activeIndex);
   }
 
@@ -186,7 +187,6 @@ class SLGallery extends PolymerElement {
   }
 
   _activeIndexChanged(index) {
-    // [TODO]: Should reflect state to slideshow and handle view from slideshow.active
     if (index !== null && this._images && this._images[index]) {
       this.slideshow.activeImage = this._images[index];
     } else {
