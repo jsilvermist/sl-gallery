@@ -161,6 +161,21 @@ class SLGallerySlideshow extends PolymerElement {
       startTime: null,
     };
 
+    this._zoom = {
+      active: false,
+      scale: 1,
+      coordinates: {
+        center: {
+          x: null,
+          y: null,
+        },
+        previous: {
+          x: null,
+          y: null,
+        },
+      },
+    };
+
     // Bind handlers to `this` to allow easy listener removal
     this._handleKeydown = this._handleKeydown.bind(this);
   }
@@ -181,9 +196,13 @@ class SLGallerySlideshow extends PolymerElement {
     window.addEventListener('resize', this.touchOffsetHiddenImages.bind(this));
 
     // Handle zoom
-    // e.deltaY > 0 == down
-    // e.deltaY < 0 == up
-    // this.addEventListener('wheel', this.handleWheel);
+    this.addEventListener('wheel', this.handleWheel);
+    this.addEventListener('touchstart', this.handleZoomClickStart);
+    this.addEventListener('mousedown', this.handleZoomClickStart);
+    this.addEventListener('touchmove', this.handleZoomMove);
+    this.addEventListener('mousemove', this.handleZoomMove);
+    this.addEventListener('touchend', this.handleZoomEnd);
+    this.addEventListener('mouseup', this.handleZoomEnd);
   }
 
   disconnectedCallback() {
@@ -222,6 +241,9 @@ class SLGallerySlideshow extends PolymerElement {
   }
 
   handleTouchStart(event) {
+    // Return if zooming
+    if (this._zoom.active) return;
+
     const { start } = this._touch.coordinates;
     start.x = event.touches[0].clientX;
     start.y = event.touches[0].clientY;
@@ -232,6 +254,11 @@ class SLGallerySlideshow extends PolymerElement {
   }
 
   handleTouchMove(event) {
+    // Return if zooming
+    if (this._zoom.active) return;
+
+    event.preventDefault();
+
     const { start, move } = this._touch.coordinates;
     if (!start.x || !start.y) return;
     move.x = event.touches[0].clientX;
@@ -241,9 +268,8 @@ class SLGallerySlideshow extends PolymerElement {
     const yDiff = start.y - move.y;
 
     // Scale expiramenting
-    const normalizedXDiff = xDiff < 0 ? -xDiff : xDiff;
-    const scaleInt = 1 + Math.floor(normalizedXDiff / 1000);
-    const scaleDec = this.helperPadString(normalizedXDiff.toString().slice(-3), 3);
+    const scaleInt = 1 + Math.floor(Math.abs(xDiff) / 1000);
+    const scaleDec = this.helperPadString(Math.abs(xDiff).toString().slice(-3), 3);
 
     // Movement is larger along the X axis than Y axis
     if (Math.abs(xDiff) > Math.abs(yDiff)) {
@@ -253,27 +279,33 @@ class SLGallerySlideshow extends PolymerElement {
           this.$.nextImage.style.transform = `translateX(${-xDiff}px)`;
           this.$.image.style.transform = `translateX(${-xDiff}px)`;
         } else {
-          this.$.previousImage.style.transform = `translateX(0px)`;
           this.$.image.style.transform = `translateX(0px) scale(${scaleInt}.${scaleDec})`;
           this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
         }
+        this.$.previousImage.style.transform = `translateX(0px)`;
       } else {
         // Right swipe
         if (this.activeImage.previousImage) {
           this.$.previousImage.style.transform = `translateX(${-xDiff}px)`;
           this.$.image.style.transform = `translateX(${-xDiff}px)`;
         } else {
-          this.$.nextImage.style.transform = `translateX(0px)`;
           this.$.image.style.transform = `translateX(0px) scale(${scaleInt}.${scaleDec})`;
           this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
         }
+        this.$.nextImage.style.transform = `translateX(0px)`;
       }
     }
   }
 
   handleTouchEnd() {
-    const touchEndTime = performance.now();
+    // Return if zooming
+    if (this._zoom.active) return;
+
     const { start, move } = this._touch.coordinates;
+    if (!move.x || !move.y) return;
+
+    // Get the duration of the touch and coordinates
+    const touchDuration = performance.now() - this._touch.startTime;
 
     // Get diff from comparing start against final movement
     const xDiff = start.x - move.x;
@@ -281,53 +313,70 @@ class SLGallerySlideshow extends PolymerElement {
     // Get window size
     const w = Math.max(document.documentElement.clientWidth,
       window.innerWidth || 0);
-    const minSwipeDistance = Math.min(Math.max(w/5, 60), 350);
+
+    // Differentiate swipes from drags
+    const minSwipeDistance = Math.min(Math.max(w / 6, 50), 250);
+    const isSwipe = Math.abs(xDiff) > touchDuration * 0.65;
+
+    const imageElements = [
+      this.$.image,
+      this.$.previousImage,
+      this.$.nextImage
+    ];
 
     // If you pass a certain distance or velocity and distance...
-    if (xDiff > w / 4 || (xDiff > minSwipeDistance &&
-        this._touch.startTime < touchEndTime + 175)) {
-      // [TODO]: Transition to next image fast but gracefully
+    if (this.activeImage.nextImage &&
+        (xDiff > w / 4 || (xDiff > minSwipeDistance && isSwipe))) {
+      // [TODO]: Transition to next image fast but smoothly
       this._navigateToNextImage();
-    } else if (xDiff < -(w / 4) || (xDiff < -minSwipeDistance &&
-        this._touch.startTime < touchEndTime + 175)) {
-      // [TODO]: Transition to previous image fast but gracefully
+    } else if (this.activeImage.previousImage &&
+        (xDiff < -(w / 4) || (xDiff < -minSwipeDistance && isSwipe))) {
+      // [TODO]: Transition to previous image fast but smoothly
       this._navigateToPreviousImage();
+    } else {
+      // Reset transforms
+      imageElements.forEach((image) => {
+        const transitionTime = 150;
+        image.style.transition = `transform ${transitionTime}ms`;
+        image.style.transform = 'translateX(0)';
+        setTimeout(() => {
+          image.style.transition = 'unset';
+        }, transitionTime);
+      });
     }
 
-    // Reset transforms
-    // [TODO]: Add transition
-    this.$.image.style.transform = `translateX(0)`;
-    this.$.previousImage.style.transform = `translateX(0)`;
-    this.$.nextImage.style.transform = `translateX(0)`;
+    // Reset coordinates
+    move.x = null;
+    move.y = null;
   };
 
   touchOffsetHiddenImages() {
     if (!this.activeImage) return;
 
     // Get window size
-    const aW = Math.max(document.documentElement.clientWidth,
+    const w = Math.max(document.documentElement.clientWidth,
       window.innerWidth || 0);
-    const aH = Math.max(document.documentElement.clientHeight,
+    const h = Math.max(document.documentElement.clientHeight,
       window.innerHeight || 0);
 
     // Offset previous image just off the edge of the screen
     if (this.activeImage.previousImage) {
-      const pW = this.activeImage.previousImage.width;
-      const pH = this.activeImage.previousImage.height;
-      const pBgW = this.touchGetContainImageSize(pW, pH, aW, aH).imageWidth;
-      const pOffset = pBgW + ((aW - pBgW) / 2);
-      this.$.previousImage.style.left = `${-pOffset}px`;
+      const dataW = this.activeImage.previousImage.width;
+      const dataH = this.activeImage.previousImage.height;
+      const realW = this.touchGetContainImageSize(dataW, dataH, w, h).imageWidth;
+      const offset = realW + ((w - realW) / 2);
+      this.$.previousImage.style.left = `${-offset}px`;
     } else {
-      this.$.nextImage.style.left = '-100vw';
+      this.$.previousImage.style.left = '-100vw';
     }
 
     // Offset next image just off the edge of the screen
     if (this.activeImage.nextImage) {
-      const nW = this.activeImage.nextImage.width;
-      const nH = this.activeImage.nextImage.height;
-      const nBgW = this.touchGetContainImageSize(nW, nH, aW, aH).imageWidth;
-      const nOffset = nBgW + ((aW - nBgW) / 2);
-      this.$.nextImage.style.right = `${-nOffset}px`;
+      const dataW = this.activeImage.nextImage.width;
+      const dataH = this.activeImage.nextImage.height;
+      const realW = this.touchGetContainImageSize(dataW, dataH, w, h).imageWidth;
+      const offset = realW + ((w - realW) / 2);
+      this.$.nextImage.style.right = `${-offset}px`;
     } else {
       this.$.nextImage.style.right = '-100vw';
     }
@@ -359,6 +408,80 @@ class SLGallerySlideshow extends PolymerElement {
     const str = num.toString();
     const zeros = size - str.length;
     return '0'.repeat(zeros > 0 ? zeros : 0) + str;
+  }
+
+  handleWheel(event) {
+    if (event.deltaY < 0) {
+      // Handle scroll up
+      if (this._zoom.scale < 3) {
+        this._zoom.scale += 0.2;
+        // Save for zoom move
+        const { center } = this._zoom.coordinates;
+        center.x = event.clientX;
+        center.y = event.clientY;
+        this.$.image.style.transformOrigin = `${event.clientX}px ${event.clientY}px`;
+        this.$.image.style.transform = `scale(${this._zoom.scale})`;
+      }
+    } else {
+      // Handle scroll down
+      if (this._zoom.scale > 1) {
+        this._zoom.scale -= 0.2;
+        this.$.image.style.transform = `scale(${this._zoom.scale})`;
+      }
+    }
+
+    if (this._zoom.scale === 1) {
+      this._zoom.active = false;
+      this.style.cursor = 'unset';
+    } else {
+      this._zoom.active = true;
+      this.style.cursor = 'grab';
+    }
+  }
+
+  handleZoomClickStart(event) {
+    if (this._zoom.active) {
+      // [TODO]: Prevent navigation and toolbar toggling
+      const { previous } = this._zoom.coordinates;
+      if (event.touches && event.touches[0]) {
+        previous.x = event.touches[0].clientX;
+        previous.y = event.touches[0].clientY;
+      } else {
+        previous.x = event.clientX;
+        previous.y = event.clientY;
+      }
+    }
+  }
+
+  handleZoomMove(event) {
+    if (this._zoom.active) {
+      event.preventDefault();
+      const { center, previous } = this._zoom.coordinates;
+      let x, y;
+      if (event.touches && event.touches[0]) {
+        x = event.touches[0].clientX;
+        y = event.touches[0].clientY;
+      } else {
+        if (event.buttons !== 1) return;
+        x = event.clientX;
+        y = event.clientY;
+      }
+
+      const xDiff = previous.x - x;
+      const yDiff = previous.y - y;
+
+      previous.x = x;
+      previous.y = y;
+
+      center.x += xDiff;
+      center.y += yDiff;
+
+      this.$.image.style.transformOrigin = `${center.x}px ${center.y}px`;
+    }
+  }
+
+  handleZoomEnd(event) {
+    // [TODO]: Re-enable navigation and toolbar toggling
   }
 
   _activeImageIndexChanged(index) {
@@ -446,15 +569,51 @@ class SLGallerySlideshow extends PolymerElement {
 
   _navigateToPreviousImage() {
     if (this.activeImage.hasPreviousImage) {
-      window.location.hash =
-        `/${this.gallery.prefix}/${this.activeImage.previousImage.index}`;
+      const image = this.$.image;
+      const previousImage = this.$.previousImage;
+      const transitionTime = 200;
+
+      image.style.transition = `transform ${transitionTime}ms`;
+      previousImage.style.transition = `transform ${transitionTime}ms`;
+      image.style.transform = 'translateX(100vw)';
+
+      const offset = Math.abs(parseInt(this.$.previousImage.style.left));
+      previousImage.style.transform = `translateX(${offset}px)`;
+
+      // Reset after transition
+      setTimeout(() => {
+        image.style.transition = 'unset';
+        previousImage.style.transition = 'unset';
+        window.location.hash =
+          `/${this.gallery.prefix}/${this.activeImage.previousImage.index}`;
+        image.style.transform = 'translateX(0)';
+        previousImage.style.transform = 'translateX(0px)';
+      }, transitionTime);
     }
   }
 
   _navigateToNextImage() {
     if (this.activeImage.hasNextImage) {
-      window.location.hash =
-        `/${this.gallery.prefix}/${this.activeImage.nextImage.index}`;
+      const image = this.$.image;
+      const nextImage = this.$.nextImage;
+      const transitionTime = 200;
+
+      image.style.transition = `transform ${transitionTime}ms`;
+      nextImage.style.transition = `transform ${transitionTime}ms`;
+      image.style.transform = 'translateX(-100vw)';
+
+      const offset = Math.abs(parseInt(this.$.nextImage.style.right));
+      nextImage.style.transform = `translateX(${-offset}px)`;
+
+      // Reset after transition
+      setTimeout(() => {
+        image.style.transition = 'unset';
+        nextImage.style.transition = 'unset';
+        window.location.hash =
+          `/${this.gallery.prefix}/${this.activeImage.nextImage.index}`;
+        image.style.transform = 'translateX(0)';
+        nextImage.style.transform = 'translateX(0px)';
+      }, transitionTime);
     }
   }
 
