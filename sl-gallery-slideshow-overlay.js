@@ -175,7 +175,7 @@ class SLGallerySlideshowOverlay extends PolymerElement {
             on-click="_resetSlideshow">
         </paper-icon-button>
       </app-toolbar>
-      <app-toolbar class="footer" has-caption$="[[activeImage._hasCaption]]">
+      <app-toolbar class="footer" has-caption$="[[activeImage.hasCaption]]">
         <div main-title>[[activeImage.caption]]</div>
       </app-toolbar>
 

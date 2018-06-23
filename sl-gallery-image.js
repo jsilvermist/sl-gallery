@@ -69,19 +69,22 @@ class SLGalleryImage extends PolymerElement {
 
   static get properties() {
     return {
-      _image: {
-        type: String,
-        computed: '_computeImage(src, small)',
-        observer: '_imageChanged',
-      },
-      _hasCaption: {
-        type: Boolean,
-        computed: '_computeHasCaption(caption)',
-      },
       src: String,
       small: String,
       title: String,
       caption: String,
+      width: Number,
+      height: Number,
+      hasCaption: {
+        type: Boolean,
+        computed: '_computeHasCaption(caption)',
+        readOnly: true,
+      },
+      _imageUrl: {
+        type: String,
+        computed: '_computeImage(src, small)',
+        observer: '_imageUrlChanged',
+      },
     };
   }
 
@@ -97,19 +100,19 @@ class SLGalleryImage extends PolymerElement {
     return Boolean(caption);
   }
 
-  _imageChanged(image) {
-    this.style.backgroundImage = `url(${image})`;
-    this._getDimensions(image);
+  _imageUrlChanged(imageUrl) {
+    this.style.backgroundImage = `url(${imageUrl})`;
+    if (!this.height || !this.width) this._getDimensions(imageUrl);
   }
 
-  _getDimensions(src) {
+  _getDimensions(imageUrl) {
     const img = new Image();
     img.onload = () => {
       this.width = img.width;
       this.height = img.height;
       delete img.onload;
     }
-    img.src = src;
+    img.src = imageUrl;
   }
 }
 

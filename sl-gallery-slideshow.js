@@ -77,36 +77,36 @@ class SLGallerySlideshow extends PolymerElement {
       <div class="image-container">
         <iron-image
             id="previousImage"
-            src="[[activeImage.previousImage.src]]"
+            src="[[_previousImage.src]]"
             alt=""
             preload
             fade
             sizing="contain"
-            placeholder="[[activeImage.previousImage.small]]"
-            loaded="{{_imageLoadedOffscreen}}"
-            error="{{_imageError}}">
+            placeholder="[[_previousImage.small]]"
+            on-loaded-changed="_handleAdjoiningImageLoaded"
+            on-error-changed="_imageErrorChanged">
         </iron-image>
         <iron-image
             id="image"
-            src="[[_imageSrc]]"
+            src="[[_viewImage.src]]"
             alt=""
             preload
             fade
             sizing="contain"
-            placeholder="[[_imageSmall]]"
-            loaded="{{_imageLoaded}}"
-            error="{{_imageError}}">
+            placeholder="[[_viewImage.small]]"
+            on-loaded-changed="_handleImageLoaded"
+            on-error-changed="_imageErrorChanged">
         </iron-image>
         <iron-image
             id="nextImage"
-            src="[[activeImage.nextImage.src]]"
+            src="[[_nextImage.src]]"
             alt=""
             preload
             fade
             sizing="contain"
-            placeholder="[[activeImage.nextImage.small]]"
-            loaded="{{_imageLoadedOffscreen}}"
-            error="{{_imageError}}">
+            placeholder="[[_nextImage.small]]"
+            on-loaded-changed="_handleAdjoiningImageLoaded"
+            on-error-changed="_imageErrorChanged">
         </iron-image>
       </div>
     `;
@@ -121,27 +121,20 @@ class SLGallerySlideshow extends PolymerElement {
         value: true,
         observer: '_activeChanged',
       },
-      activeImage: Object,
-      _imageError: String,
-      _imageLoaded: Boolean,
-      _imageLoadedOffscreen: Boolean,
-      _imageSrc: String,
-      _imageSmall: String,
+      activeImage: {
+        type: Object,
+        observer: '_activeImageChanged',
+      },
       _opened: {
         type: Boolean,
         value: false,
         observer: '_openedChanged',
       },
       _spinnerActive: Boolean,
+      _viewImage: Object,
+      _previousImage: Object,
+      _nextImage: Object,
     };
-  }
-
-  static get observers() {
-    return [
-      '_activeImageIndexChanged(activeImage.index)',
-      '_imageLoadedChanged(_imageLoaded)',
-      '_imageErrorChanged(_imageError)',
-    ];
   }
 
   constructor() {
@@ -484,27 +477,42 @@ class SLGallerySlideshow extends PolymerElement {
     // [TODO]: Re-enable navigation and toolbar toggling
   }
 
-  _activeImageIndexChanged(index) {
-    // Exit if not active, or if index is undefined
-    if (!this.active || index === undefined) {
-      this._opened = false;
-      return;
-    }
-
-    // Open slideshow
-    this._opened = true;
-
-    // Update slideshow image, overlay, and buttons
-    this._updateView();
+  _activeImageChanged(activeImage) {
+    // Update view images and elements
+    this._updateView(this.active, activeImage);
   }
 
-  _updateView() {
-    // Load the image in iron-image
-    this._imageSmall = this.activeImage.small;
-    this._imageSrc = this.activeImage.src;
+  _activeChanged(active) {
+    // Update view images and elements
+    this._updateView(active, this.activeImage);
+  }
 
-    // Display spinner if image hasn't been loaded
-    this._spinnerActive = !this.activeImage.loaded;
+  _openedChanged(opened) {
+    if (opened) {
+      document.body.style.overflow = 'hidden';
+      this.hidden = false;
+      this.focus();
+    } else {
+      document.body.style.overflow = '';
+      this.hidden = true;
+      this.blur();
+    }
+  }
+
+  _updateView(active, activeImage) {
+    if (active && activeImage) {
+      // Open slideshow
+      this._opened = true;
+
+      // Display spinner if image hasn't been loaded
+      this._spinnerActive = !this.activeImage.loaded;
+
+      // Update images in iron-image view elements
+      this._viewImage = this.activeImage;
+    } else {
+      // Close if not active, or if activeImage is undefined
+      this._opened = false;
+    }
   }
 
   _resetSlideshow() {
@@ -512,8 +520,9 @@ class SLGallerySlideshow extends PolymerElement {
 
     this._exitFullscreen();
 
-    this._imageSmall = '';
-    this._imageSrc = '';
+    this._viewImage = undefined;
+    this._previousImage = undefined;
+    this._nextImage = undefined;
 
     this._spinnerActive = false;
 
@@ -531,38 +540,51 @@ class SLGallerySlideshow extends PolymerElement {
     }
   }
 
-  _preloadAdjoiningImages() {
-    // Preload previous image if not loaded
-    if (this.activeImage.hasPreviousImage) {
-      this._preloadImage(this.activeImage.previousImage);
-    }
-
-    // Preload next image if not loaded
-    if (this.activeImage.hasNextImage) {
-      this._preloadImage(this.activeImage.nextImage);
-    }
-  }
-
-  _imageLoadedChanged(loaded) {
-    if (loaded) {
+  _handleImageLoaded(event) {
+    if (event.detail.value) { // loaded
+      // Image loaded, disable spinner
       this._spinnerActive = false;
 
       // activeImage could be undefined if the image takes too long to load
       if (this.activeImage) {
+        // Load adjoining images
+        this._previousImage = this.activeImage.previousImage;
+        this._nextImage = this.activeImage.nextImage;
+
+        // If this is the image's first time loading,
+        // save a reference of the image to keep it cached
         if (!this.activeImage.loaded) {
-          this.activeImage.reference = this.$.image.shadowRoot.querySelector('img');
+          this.activeImage.reference =
+            this.$.image.shadowRoot.querySelector('img');
           this.activeImage.loaded = true;
         }
-        this._preloadAdjoiningImages();
       }
     }
   }
 
-  _imageErrorChanged(error) {
-    if (error) {
+  _handleAdjoiningImageLoaded(event) {
+    if (event.detail.value) { // loaded
+      // Get the image element id to differentiate previous/next
+      const id = event.target.id;
+
+      // activeImage could be undefined if the image takes too long to load
+      if (this.activeImage) {
+        if (!this.activeImage[id].loaded) {
+          this.activeImage[id].reference = this.$[id].shadowRoot.querySelector('img');
+          this.activeImage[id].loaded = true;
+        }
+      }
+    }
+  }
+
+  _imageErrorChanged(event) {
+    if (event.detail.value) { // error exists
       // Dispatch event upon error while loading an image
       this.gallery.dispatchEvent(new CustomEvent('error', {
-        detail: { error: 'Error loading image...' },
+        detail: {
+          error: 'Error loading image...',
+          src: event.target.src,
+        },
       }));
     }
   }
@@ -633,27 +655,6 @@ class SLGallerySlideshow extends PolymerElement {
       return true;
     }
     return false;
-  }
-
-  _openedChanged(opened) {
-    if (opened) {
-      document.body.style.overflow = 'hidden';
-      this.hidden = false;
-      this.focus();
-    } else {
-      document.body.style.overflow = '';
-      this.hidden = true;
-      this.blur();
-    }
-  }
-
-  _activeChanged(active) {
-    if (active && this.activeImage && this.activeImage.index !== undefined) {
-      this._opened = true;
-      this._updateView();
-    } else {
-      this._opened = false;
-    }
   }
 }
 
