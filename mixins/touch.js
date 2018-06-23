@@ -1,3 +1,5 @@
+import { zeroPad } from '../helpers.js';
+
 /**
  * Touch swiping
  * @polymer
@@ -36,7 +38,6 @@ export const TouchMixin = (superclass) => class extends superclass {
     this.addEventListener('touchstart', this.handleTouchStart);
     this.addEventListener('touchmove', this.handleTouchMove);
     this.addEventListener('touchend', this.handleTouchEnd);
-    window.addEventListener('resize', this.touchOffsetHiddenImages.bind(this));
   }
 
   handleTouchStart(event) {
@@ -46,8 +47,6 @@ export const TouchMixin = (superclass) => class extends superclass {
     const { start } = this._touch.coordinates;
     start.x = event.touches[0].clientX;
     start.y = event.touches[0].clientY;
-
-    this.touchOffsetHiddenImages();
 
     this._touch.startTime = performance.now();
   }
@@ -68,7 +67,7 @@ export const TouchMixin = (superclass) => class extends superclass {
 
     // Scale expiramenting
     const scaleInt = 1 + Math.floor(Math.abs(xDiff) / 1000);
-    const scaleDec = this.helperPadString(Math.abs(xDiff).toString().slice(-3), 3);
+    const scaleDec = zeroPad(Math.abs(xDiff).toString().slice(-3), 3);
 
     // Movement is larger along the X axis than Y axis
     if (Math.abs(xDiff) > Math.abs(yDiff)) {
@@ -110,11 +109,11 @@ export const TouchMixin = (superclass) => class extends superclass {
     const xDiff = start.x - move.x;
 
     // Get window size
-    const w = Math.max(document.documentElement.clientWidth,
+    const vw = Math.max(document.documentElement.clientWidth,
       window.innerWidth || 0);
 
     // Differentiate swipes from drags
-    const minSwipeDistance = Math.min(Math.max(w / 6, 50), 250);
+    const minSwipeDistance = Math.min(Math.max(vw / 6, 50), 250);
     const isSwipe = Math.abs(xDiff) > touchDuration * 0.65;
 
     const imageElements = [
@@ -125,12 +124,12 @@ export const TouchMixin = (superclass) => class extends superclass {
 
     // If you pass a certain distance or velocity and distance...
     if (this.activeImage.nextImage &&
-        (xDiff > w / 4 || (xDiff > minSwipeDistance && isSwipe))) {
-      // [TODO]: Transition to next image fast but smoothly
+        (xDiff > vw / 4 || (xDiff > minSwipeDistance && isSwipe))) {
+      // Navigate to next image
       this._navigateToNextImage();
     } else if (this.activeImage.previousImage &&
-        (xDiff < -(w / 4) || (xDiff < -minSwipeDistance && isSwipe))) {
-      // [TODO]: Transition to previous image fast but smoothly
+        (xDiff < -(vw / 4) || (xDiff < -minSwipeDistance && isSwipe))) {
+      // Navigate to previous image
       this._navigateToPreviousImage();
     } else {
       // Reset transforms
@@ -139,7 +138,7 @@ export const TouchMixin = (superclass) => class extends superclass {
         image.style.transition = `transform ${transitionTime}ms`;
         image.style.transform = 'translateX(0)';
         setTimeout(() => {
-          image.style.transition = 'unset';
+          image.style.transition = '';
         }, transitionTime);
       });
     }
@@ -147,66 +146,6 @@ export const TouchMixin = (superclass) => class extends superclass {
     // Reset coordinates
     move.x = null;
     move.y = null;
-  };
-
-  touchOffsetHiddenImages() {
-    if (!this.activeImage) return;
-
-    // Get window size
-    const w = Math.max(document.documentElement.clientWidth,
-      window.innerWidth || 0);
-    const h = Math.max(document.documentElement.clientHeight,
-      window.innerHeight || 0);
-
-    // Offset previous image just off the edge of the screen
-    if (this.activeImage.previousImage) {
-      const dataW = this.activeImage.previousImage.width;
-      const dataH = this.activeImage.previousImage.height;
-      const realW = this.touchGetContainImageSize(dataW, dataH, w, h).imageWidth;
-      const offset = realW + ((w - realW) / 2);
-      this.$.previousImage.style.left = `${-offset}px`;
-    } else {
-      this.$.previousImage.style.left = '-100vw';
-    }
-
-    // Offset next image just off the edge of the screen
-    if (this.activeImage.nextImage) {
-      const dataW = this.activeImage.nextImage.width;
-      const dataH = this.activeImage.nextImage.height;
-      const realW = this.touchGetContainImageSize(dataW, dataH, w, h).imageWidth;
-      const offset = realW + ((w - realW) / 2);
-      this.$.nextImage.style.right = `${-offset}px`;
-    } else {
-      this.$.nextImage.style.right = '-100vw';
-    }
-  }
-
-  touchGetContainImageSize(imageWidth, imageHeight, areaWidth, areaHeight) {
-    const imageRatio = imageWidth / imageHeight;
-    if (imageRatio >= 1) {
-      // Landscape
-      imageWidth = areaWidth;
-      imageHeight = imageWidth / imageRatio;
-      if (imageHeight > areaHeight) {
-        imageHeight = areaHeight;
-        imageWidth = areaHeight * imageRatio;
-      }
-    } else {
-      // Portrait
-      imageHeight = areaHeight;
-      imageWidth = imageHeight * imageRatio;
-      if (imageWidth > areaWidth) {
-        imageWidth = areaWidth;
-        imageHeight = areaWidth / imageRatio;
-      }
-    }
-    return { imageWidth, imageHeight };
-  }
-
-  helperPadString(num, size) {
-    const str = num.toString();
-    const zeros = size - str.length;
-    return '0'.repeat(zeros > 0 ? zeros : 0) + str;
   }
 
 }

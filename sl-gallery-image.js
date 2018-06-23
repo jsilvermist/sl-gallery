@@ -49,15 +49,6 @@ class SLGalleryImage extends PolymerElement {
           padding-top: var(--sl-gallery-item-height, 100%);
         }
 
-        /* [TODO] Use or remove. Used only if a inner container is added to this element */
-        :host > * {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-        }
-
         :host([hidden]) {
           display: none;
         }

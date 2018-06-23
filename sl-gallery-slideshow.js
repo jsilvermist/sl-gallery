@@ -2,6 +2,7 @@ import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
 import fullscreen from '@jsilvermist/fullscreen-api';
 import { TouchMixin } from './mixins/touch.js';
 import { ZoomMixin } from './mixins/zoom.js';
+import { getContainImageSize } from './helpers.js';
 
 import '@polymer/iron-image/iron-image.js';
 import '@polymer/paper-spinner/paper-spinner-lite.js';
@@ -44,20 +45,23 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         }
 
         .image-container iron-image {
+          position: absolute;
+          top: 0;
           width: 100vw;
           height: 100vh;
           will-change: transform;
         }
 
+        #image {
+          left: 0;
+          right: 0;
+        }
+
         #previousImage {
-          position: absolute;
-          top: 0;
           left: -100vw;
         }
 
         #nextImage {
-          position: absolute;
-          top: 0;
           right: -100vw;
         }
       </style>
@@ -143,7 +147,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     super();
 
     // Bind handlers to `this` to allow easy listener removal
-    this._handleKeydown = this._handleKeydown.bind(this);
+    this.calculateImageOffsets = this.calculateImageOffsets.bind(this);
   }
 
   connectedCallback() {
@@ -154,6 +158,9 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
     // Handle key presses
     this.addEventListener('keydown', this._handleKeydown);
+
+    // Recalculate offsets for iron-images on resize
+    window.addEventListener('resize', this.calculateImageOffsets);
   }
 
   disconnectedCallback() {
@@ -161,6 +168,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
     // Clean up event listeners on disconnect
     this.removeEventListener('keydown', this._handleKeydown);
+    window.removeEventListener('resize', this.calculateImageOffsets);
   }
 
   _handleKeydown(event) {
@@ -223,6 +231,9 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
       // Update images in iron-image view elements
       this._viewImage = this.activeImage;
+
+      // Get offsets for transitioning images
+      this.calculateImageOffsets();
     } else {
       // Close if not active, or if activeImage is undefined
       this._opened = false;
@@ -293,13 +304,16 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   }
 
   _navigateToPreviousImage() {
-    if (this.activeImage.hasPreviousImage) {
+    if (this.activeImage.hasPreviousImage && !this._transitioning) {
+      this._transitioning = true;
+      const transitionTime = 200;
       const image = this.$.image;
       const previousImage = this.$.previousImage;
-      const transitionTime = 200;
 
+      // Enable transitions
       image.style.transition = `transform ${transitionTime}ms`;
       previousImage.style.transition = `transform ${transitionTime}ms`;
+
       image.style.transform = 'translateX(100vw)';
 
       const offset = Math.abs(parseInt(this.$.previousImage.style.left));
@@ -307,24 +321,29 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
       // Reset after transition
       setTimeout(() => {
-        image.style.transition = 'unset';
-        previousImage.style.transition = 'unset';
+        // Disable transitions
+        image.style.transition = '';
+        previousImage.style.transition = '';
         window.location.hash =
           `/${this.gallery.prefix}/${this.activeImage.previousImage.index}`;
         image.style.transform = 'translateX(0)';
         previousImage.style.transform = 'translateX(0px)';
+        this._transitioning = false;
       }, transitionTime);
     }
   }
 
   _navigateToNextImage() {
-    if (this.activeImage.hasNextImage) {
+    if (this.activeImage.hasNextImage && !this._transitioning) {
+      this._transitioning = true;
+      const transitionTime = 200;
       const image = this.$.image;
       const nextImage = this.$.nextImage;
-      const transitionTime = 200;
 
+      // Enable transitions
       image.style.transition = `transform ${transitionTime}ms`;
       nextImage.style.transition = `transform ${transitionTime}ms`;
+
       image.style.transform = 'translateX(-100vw)';
 
       const offset = Math.abs(parseInt(this.$.nextImage.style.right));
@@ -338,7 +357,55 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
           `/${this.gallery.prefix}/${this.activeImage.nextImage.index}`;
         image.style.transform = 'translateX(0)';
         nextImage.style.transform = 'translateX(0px)';
+        this._transitioning = false;
       }, transitionTime);
+    }
+  }
+
+  calculateImageOffsets() {
+    console.log('calculateImageOffsets');
+    if (!this.active || !this.activeImage) return;
+    // [TODO]: Streamline offset code, remove redundant code
+
+    // Get window viewport size
+    const vw = Math.max(document.documentElement.clientWidth,
+      window.innerWidth || 0);
+    const vh = Math.max(document.documentElement.clientHeight,
+      window.innerHeight || 0);
+
+    // Offset previous image just off the edge of the screen
+    if (this.activeImage.previousImage) {
+      const baseW = this.activeImage.previousImage.width;
+      const baseH = this.activeImage.previousImage.height;
+      if (!baseW || !baseH) {
+        // [TODO]: Don't do this...
+        setTimeout(() => this.calculateImageOffsets(), 100);
+        return;
+      }
+      // [TODO]: Fix timing issue, async SlGalleryImage._getDimensions not ready by first run.
+      const imageW = getContainImageSize(baseW, baseH, vw, vh).imageWidth;
+      const offset = imageW + ((vw - imageW) / 2);
+      console.log(baseW, baseH, imageW, offset);
+      this.$.previousImage.style.left = `${-offset}px`;
+    } else {
+      this.$.previousImage.style.left = '-100vw';
+    }
+
+    // Offset next image just off the edge of the screen
+    if (this.activeImage.nextImage) {
+      const baseW = this.activeImage.nextImage.width;
+      const baseH = this.activeImage.nextImage.height;
+      if (!baseW || !baseH) {
+        // [TODO]: Don't do this...
+        setTimeout(() => this.calculateImageOffsets(), 100);
+        return;
+      }
+      // [TODO]: Fix timing issue, async SlGalleryImage._getDimensions not ready by first run.
+      const imageW = getContainImageSize(baseW, baseH, vw, vh).imageWidth;
+      const offset = imageW + ((vw - imageW) / 2);
+      this.$.nextImage.style.right = `${-offset}px`;
+    } else {
+      this.$.nextImage.style.right = '-100vw';
     }
   }
 
