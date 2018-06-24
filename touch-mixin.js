@@ -1,4 +1,4 @@
-import { zeroPad } from '../helpers.js';
+import { zeroPad } from './helpers.js';
 
 /**
  * Touch swiping
@@ -134,12 +134,11 @@ export const TouchMixin = (superclass) => class extends superclass {
     } else {
       // Reset transforms
       imageElements.forEach((image) => {
-        const transitionTime = 150;
-        image.style.transition = `transform ${transitionTime}ms`;
+        image.style.transition = `transform ${this.transitionTime}ms`;
         image.style.transform = '';
         setTimeout(() => {
           image.style.transition = '';
-        }, transitionTime);
+        }, this.transitionTime);
       });
     }
 

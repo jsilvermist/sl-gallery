@@ -1,7 +1,8 @@
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
 import fullscreen from '@jsilvermist/fullscreen-api';
-import { TouchMixin } from './mixins/touch.js';
-import { ZoomMixin } from './mixins/zoom.js';
+
+import { TouchMixin } from './touch-mixin.js';
+import { ZoomMixin } from './zoom-mixin.js';
 import { getContainImageSize } from './helpers.js';
 
 import '@polymer/iron-image/iron-image.js';
@@ -131,6 +132,10 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         type: Object,
         observer: '_activeImageChanged',
       },
+      transitionTime: {
+        type: Number,
+        value: 150,
+      },
       _opened: {
         type: Boolean,
         value: false,
@@ -148,7 +153,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
     // Bind handlers to `this` to allow easy listener removal
     this._calculateImageOffsets = this._calculateImageOffsets.bind(this);
-    this._callOnceOnDimensionsChanged = this._callOnceOnDimensionsChanged.bind(this);
+    this._recalculateOnDimensionsChanged = this._recalculateOnDimensionsChanged.bind(this);
   }
 
   connectedCallback() {
@@ -312,17 +317,16 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   _navigateToPreviousImage() {
     if (this.activeImage.hasPreviousImage && !this._transitioning) {
       this._transitioning = true;
-      const transitionTime = 150;
       const image = this.$.image;
       const previousImage = this.$.previousImage;
+      const offset = Math.abs(parseInt(previousImage.style.left));
 
       // Enable transitions
-      image.style.transition = `transform ${transitionTime}ms`;
-      previousImage.style.transition = `transform ${transitionTime}ms`;
+      image.style.transition = `transform ${this.transitionTime}ms`;
+      previousImage.style.transition = `transform ${this.transitionTime}ms`;
 
+      // Animate transition
       image.style.transform = 'translateX(100vw)';
-
-      const offset = Math.abs(parseInt(this.$.previousImage.style.left));
       previousImage.style.transform = `translateX(${offset}px)`;
 
       // Reset after transition
@@ -333,24 +337,23 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         window.location.hash =
           `/${this.gallery.prefix}/${this.activeImage.previousImage.index}`;
         this._transitioning = false;
-      }, transitionTime);
+      }, this.transitionTime);
     }
   }
 
   _navigateToNextImage() {
     if (this.activeImage.hasNextImage && !this._transitioning) {
       this._transitioning = true;
-      const transitionTime = 150;
       const image = this.$.image;
       const nextImage = this.$.nextImage;
+      const offset = Math.abs(parseInt(nextImage.style.right));
 
       // Enable transitions
-      image.style.transition = `transform ${transitionTime}ms`;
-      nextImage.style.transition = `transform ${transitionTime}ms`;
+      image.style.transition = `transform ${this.transitionTime}ms`;
+      nextImage.style.transition = `transform ${this.transitionTime}ms`;
 
+      // Animate transition
       image.style.transform = 'translateX(-100vw)';
-
-      const offset = Math.abs(parseInt(this.$.nextImage.style.right));
       nextImage.style.transform = `translateX(${-offset}px)`;
 
       // Reset after transition
@@ -360,7 +363,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         window.location.hash =
           `/${this.gallery.prefix}/${this.activeImage.nextImage.index}`;
         this._transitioning = false;
-      }, transitionTime);
+      }, this.transitionTime);
     }
   }
 
@@ -394,7 +397,8 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     const baseW = image.width;
     const baseH = image.height;
     if (!baseW || !baseH) {
-      image.addEventListener('dimensions-changed', this._callOnceOnDimensionsChanged);
+      image.addEventListener('dimensions-changed',
+        this._recalculateOnDimensionsChanged);
       return;
     }
     const imageW = getContainImageSize(baseW, baseH, vw, vh).imageWidth;
@@ -402,11 +406,11 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     return imageW + ((vw - imageW) / 2);
   }
 
-  // Used for recursive call if dimensions aren't ready
-  _callOnceOnDimensionsChanged(event) {
+  _recalculateOnDimensionsChanged(event) {
+    // Used for recursive call if dimensions aren't ready
     this._calculateImageOffsets();
     event.currentTarget.removeEventListener('dimensions-changed',
-      this._callOnceOnDimensionsChanged);
+      this._recalculateOnDimensionsChanged);
   }
 
   _toggleFullscreen() {
