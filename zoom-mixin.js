@@ -1,5 +1,5 @@
 /**
- * Image zooming
+ * Slideshow view-image zooming
  * @polymer
  * @mixinFunction
  */
@@ -7,6 +7,16 @@ export const ZoomMixin = (superclass) => class extends superclass {
 
   static get properties() {
     return {
+      zoomActive: {
+        type: Boolean,
+        value: false,
+        reflectToAttribute: true,
+      },
+      zoomClicked: {
+        type: Boolean,
+        value: false,
+        reflectToAttribute: true,
+      },
       _zoom: Object,
     };
   }
@@ -15,7 +25,6 @@ export const ZoomMixin = (superclass) => class extends superclass {
     super();
 
     this._zoom = {
-      active: false,
       scale: 1,
       coordinates: {
         center: {
@@ -27,6 +36,8 @@ export const ZoomMixin = (superclass) => class extends superclass {
           y: null,
         },
       },
+      max: 5,
+      min: 1,
     };
   }
 
@@ -37,44 +48,26 @@ export const ZoomMixin = (superclass) => class extends superclass {
     this.addEventListener('wheel', this.handleWheel);
     this.addEventListener('touchstart', this.handleZoomClickStart);
     this.addEventListener('mousedown', this.handleZoomClickStart);
-    this.addEventListener('touchmove', this.handleZoomMove);
-    this.addEventListener('mousemove', this.handleZoomMove);
-    this.addEventListener('touchend', this.handleZoomEnd);
-    this.addEventListener('mouseup', this.handleZoomEnd);
+    this.addEventListener('touchmove', this.handleZoomClickMove);
+    this.addEventListener('mousemove', this.handleZoomClickMove);
+    this.addEventListener('touchend', this.handleZoomClickEnd);
+    this.addEventListener('mouseup', this.handleZoomClickEnd);
   }
 
   handleWheel(event) {
-    if (event.deltaY < 0) {
+    if (event.deltaY < 0 && this.activeImage.loaded) {
       // Handle scroll up
-      if (this._zoom.scale < 3) {
-        this._zoom.scale += 0.2;
-        // Save for zoom move
-        const { center } = this._zoom.coordinates;
-        center.x = event.clientX;
-        center.y = event.clientY;
-        this.$.image.style.transformOrigin = `${event.clientX}px ${event.clientY}px`;
-        this.$.image.style.transform = `scale(${this._zoom.scale})`;
-      }
+      this.zoomIn(0.2, event.clientX, event.clientY);
     } else {
       // Handle scroll down
-      if (this._zoom.scale > 1) {
-        this._zoom.scale -= 0.2;
-        this.$.image.style.transform = `scale(${this._zoom.scale})`;
-      }
-    }
-
-    if (this._zoom.scale === 1) {
-      this._zoom.active = false;
-      this.style.cursor = '';
-    } else {
-      this._zoom.active = true;
-      this.style.cursor = 'all-scroll';
+      this.zoomOut(0.2);
     }
   }
 
   handleZoomClickStart(event) {
-    if (this._zoom.active) {
-      // [TODO]: Prevent navigation and toolbar toggling
+    if (this.zoomActive) {
+      this.zoomClicked = true;
+      event.preventDefault();
       const { previous } = this._zoom.coordinates;
       if (event.touches && event.touches[0]) {
         previous.x = event.touches[0].clientX;
@@ -86,8 +79,8 @@ export const ZoomMixin = (superclass) => class extends superclass {
     }
   }
 
-  handleZoomMove(event) {
-    if (this._zoom.active) {
+  handleZoomClickMove(event) {
+    if (this.zoomActive) {
       event.preventDefault();
       const { center, previous } = this._zoom.coordinates;
       let x, y;
@@ -106,15 +99,97 @@ export const ZoomMixin = (superclass) => class extends superclass {
       previous.x = x;
       previous.y = y;
 
-      center.x += xDiff;
-      center.y += yDiff;
+      const newX = center.x + (xDiff * 2 / this._zoom.scale);
+      const newY = center.y + (yDiff * 2 / this._zoom.scale);
 
-      this.$.image.style.transformOrigin = `${center.x}px ${center.y}px`;
+      this.updateZoomOrigin(newX, newY);
     }
   }
 
-  handleZoomEnd(event) {
-    // [TODO]: Re-enable navigation and toolbar toggling
+  handleZoomClickEnd() {
+    if (this.zoomActive) {
+      this.zoomClicked = false;
+    }
+  }
+
+  recenterZoom(x, y) {
+    const { center } = this._zoom.coordinates;
+    let newX, newY;
+    if (this._zoom.scale > 1) {
+      newX = center.x + ((x - center.x) / this._zoom.scale);
+      newY = center.y + ((y - center.y) / this._zoom.scale);
+    } else {
+      newX = x;
+      newY = y;
+    }
+
+    this.updateZoomOrigin(newX, newY);
+  }
+
+  updateZoomOrigin(x, y) {
+    const { center } = this._zoom.coordinates;
+    const dimensions = this._dimensions.current;
+
+    // Handle max zoom for X axis
+    if (x > dimensions.width + dimensions.offset) {
+      center.x = dimensions.width + dimensions.offset;
+    } else if (x < dimensions.offset) {
+      center.x = dimensions.offset;
+    } else {
+      center.x = x;
+    }
+
+    // Handle max zoom for Y axis
+    if (y > dimensions.height + dimensions.offset) {
+      center.y = dimensions.height + dimensions.offset;
+    } else if (y < -dimensions.offset) {
+      center.y = -dimensions.offset;
+    } else {
+      center.y = y;
+    }
+
+    this.$.image.style.transformOrigin = `${center.x}px ${center.y}px`;
+  }
+
+  zoomIn(increase, x, y) {
+    if (this._zoom.scale < this._zoom.max) {
+      if (this._zoom.scale + increase < this._zoom.max) {
+        this._zoom.scale = this._zoom.scale + increase;
+      } else {
+        this._zoom.scale = this._zoom.max;
+      }
+
+      // Update zoom related properties
+      this.zoomActive = true;
+      if (x && y) this.recenterZoom(x, y);
+      this.$.image.style.transform = `scale(${this._zoom.scale})`;
+    }
+  }
+
+  zoomOut(decrease) {
+    if (this._zoom.scale > this._zoom.min) {
+      if (this._zoom.scale - decrease > this._zoom.min) {
+        this._zoom.scale = this._zoom.scale - decrease;
+      } else {
+        this._zoom.scale = this._zoom.min;
+      }
+
+      // Update zoom or reset
+      if (this._zoom.scale !== this._zoom.min) {
+        this.$.image.style.transform = `scale(${this._zoom.scale})`;
+      } else {
+        this._resetZoom();
+      }
+    }
+  }
+
+  _resetZoom() {
+    this.zoomActive = false;
+    this.zoomClicked = false;
+    this._zoom.scale = this._zoom.min;
+    this._zoom.coordinates.center.x = null;
+    this._zoom.coordinates.center.y = null;
+    this.$.image.style.transform = '';
   }
 
 }

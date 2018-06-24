@@ -33,6 +33,17 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
           display: none !important;
         }
 
+        :host([zoom-active]) {
+          cursor: all-scroll;
+          cursor: -webkit-grab;
+          cursor: grab;
+        }
+
+        :host([zoom-clicked]) {
+          cursor: -webkit-grabbing !important;
+          cursor: grabbing !important;
+        }
+
         paper-spinner-lite {
           position: absolute;
           width: 42px;
@@ -70,8 +81,10 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       <sl-gallery-slideshow-overlay
           id="overlay"
           active-image="[[activeImage]]"
+          zoom-active="[[zoomActive]]"
           on-navigate-to-previous-image="_navigateToPreviousImage"
           on-navigate-to-next-image="_navigateToNextImage"
+          on-reset-zoom="_resetZoom"
           on-reset-slideshow="_resetSlideshow"
           on-toggle-fullscreen="_toggleFullscreen">
       </sl-gallery-slideshow-overlay>
@@ -145,6 +158,11 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       _viewImage: Object,
       _previousImage: Object,
       _nextImage: Object,
+      _dimensions: {
+        type: Object,
+        value: () => new Object(),
+        observer: '_dimensionsChanged',
+      },
     };
   }
 
@@ -152,7 +170,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     super();
 
     // Bind handlers to `this` to allow easy listener removal
-    this._calculateImageOffsets = this._calculateImageOffsets.bind(this);
+    this._generateDimensions = this._generateDimensions.bind(this);
     this._recalculateOnDimensionsChanged = this._recalculateOnDimensionsChanged.bind(this);
   }
 
@@ -165,8 +183,8 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     // Handle key presses
     this.addEventListener('keydown', this._handleKeydown);
 
-    // Recalculate offsets for iron-images on resize
-    window.addEventListener('resize', this._calculateImageOffsets);
+    // Recalculate dimensions for iron-images on resize
+    window.addEventListener('resize', this._generateDimensions);
   }
 
   disconnectedCallback() {
@@ -174,7 +192,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
     // Clean up event listeners on disconnect
     this.removeEventListener('keydown', this._handleKeydown);
-    window.removeEventListener('resize', this._calculateImageOffsets);
+    window.removeEventListener('resize', this._generateDimensions);
   }
 
   _handleKeydown(event) {
@@ -232,6 +250,9 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       // Open slideshow
       this._opened = true;
 
+      // Reset and deactivate zoom
+      this._resetZoom()
+
       // Display spinner if image hasn't been loaded
       this._spinnerActive = !this.activeImage.loaded;
 
@@ -243,8 +264,11 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       this.$.previousImage.style.transform = '';
       this.$.nextImage.style.transform = '';
 
-      // Get offsets for transitioning images
-      this._calculateImageOffsets();
+      // Unlock navigation
+      this._transitioning = false;
+
+      // Get dimensions for transitioning images
+      this._generateDimensions();
     } else {
       // Close if not active, or if activeImage is undefined
       this._opened = false;
@@ -319,7 +343,13 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       this._transitioning = true;
       const image = this.$.image;
       const previousImage = this.$.previousImage;
-      const offset = Math.abs(parseInt(previousImage.style.left));
+      const dimensions = this._dimensions.previous;
+      let offset;
+      if (dimensions) {
+        offset = (dimensions.width + dimensions.offset) + 'px';
+      } else {
+        offset = '100vw';
+      }
 
       // Enable transitions
       image.style.transition = `transform ${this.transitionTime}ms`;
@@ -327,7 +357,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
       // Animate transition
       image.style.transform = 'translateX(100vw)';
-      previousImage.style.transform = `translateX(${offset}px)`;
+      previousImage.style.transform = `translateX(${offset})`;
 
       // Reset after transition
       setTimeout(() => {
@@ -346,7 +376,13 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       this._transitioning = true;
       const image = this.$.image;
       const nextImage = this.$.nextImage;
-      const offset = Math.abs(parseInt(nextImage.style.right));
+      const dimensions = this._dimensions.next;
+      let offset;
+      if (dimensions) {
+        offset = -(dimensions.width + dimensions.offset) + 'px';
+      } else {
+        offset = '-100vw';
+      }
 
       // Enable transitions
       image.style.transition = `transform ${this.transitionTime}ms`;
@@ -354,7 +390,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
       // Animate transition
       image.style.transform = 'translateX(-100vw)';
-      nextImage.style.transform = `translateX(${-offset}px)`;
+      nextImage.style.transform = `translateX(${offset})`;
 
       // Reset after transition
       setTimeout(() => {
@@ -362,32 +398,43 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         nextImage.style.transition = '';
         window.location.hash =
           `/${this.gallery.prefix}/${this.activeImage.nextImage.index}`;
-        this._transitioning = false;
       }, this.transitionTime);
     }
   }
 
-  _calculateImageOffsets() {
-    if (!this.active || !this.activeImage) return;
-
-    // Offset previous image just off the edge of the screen
-    if (this.activeImage.previousImage) {
-      const offset = this._calculateImageOffset(this.activeImage.previousImage);
+  _dimensionsChanged(dimensions) {
+    if (dimensions.previous) {
+      // Offset previous image just off the edge of the screen
+      const offset = dimensions.previous.width + dimensions.previous.offset;
       this.$.previousImage.style.left = `${-offset}px`;
     } else {
       this.$.previousImage.style.left = '-100vw';
     }
 
-    // Offset next image just off the edge of the screen
-    if (this.activeImage.nextImage) {
-      const offset = this._calculateImageOffset(this.activeImage.nextImage);
+    if (dimensions.next) {
+      // Offset next image just off the edge of the screen
+      const offset = dimensions.next.width + dimensions.next.offset;
       this.$.nextImage.style.right = `${-offset}px`;
     } else {
       this.$.nextImage.style.right = '-100vw';
     }
   }
 
-  _calculateImageOffset(image) {
+  _generateDimensions() {
+    if (!this.active || !this.activeImage) return;
+
+    // Get all active view image dimensions
+    const current = this._getViewImageDimensions(this.activeImage);
+    const previous = this._getViewImageDimensions(this.activeImage.previousImage);
+    const next = this._getViewImageDimensions(this.activeImage.nextImage);
+
+    // Set dimensions object, trigger observer
+    this._dimensions = { current, previous, next };
+  }
+
+  _getViewImageDimensions(image) {
+    if (!image) return undefined;
+
     // Get window viewport size
     const vw = Math.max(document.documentElement.clientWidth,
       window.innerWidth || 0);
@@ -399,16 +446,21 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     if (!baseW || !baseH) {
       image.addEventListener('dimensions-changed',
         this._recalculateOnDimensionsChanged);
-      return;
+      return undefined;
     }
-    const imageW = getContainImageSize(baseW, baseH, vw, vh).imageWidth;
 
-    return imageW + ((vw - imageW) / 2);
+    // Get size of contain styled image in view
+    const size = getContainImageSize(baseW, baseH, vw, vh);
+
+    return {
+      offset: (vw - size.width) / 2,
+      ...size,
+    };
   }
 
   _recalculateOnDimensionsChanged(event) {
     // Used for recursive call if dimensions aren't ready
-    this._calculateImageOffsets();
+    this._generateDimensions();
     event.currentTarget.removeEventListener('dimensions-changed',
       this._recalculateOnDimensionsChanged);
   }

@@ -1,7 +1,7 @@
 import { zeroPad } from './helpers.js';
 
 /**
- * Touch swiping
+ * Slideshow touch and swipe handling
  * @polymer
  * @mixinFunction
  */
@@ -27,6 +27,7 @@ export const TouchMixin = (superclass) => class extends superclass {
           y: null,
         },
       },
+      moving: false,
       startTime: null,
     };
   }
@@ -42,7 +43,7 @@ export const TouchMixin = (superclass) => class extends superclass {
 
   handleTouchStart(event) {
     // Return if zooming
-    if (this._zoom.active) return;
+    if (this.zoomActive) return;
 
     const { start } = this._touch.coordinates;
     start.x = event.touches[0].clientX;
@@ -53,9 +54,11 @@ export const TouchMixin = (superclass) => class extends superclass {
 
   handleTouchMove(event) {
     // Return if zooming
-    if (this._zoom.active) return;
+    if (this.zoomActive) return;
 
     event.preventDefault();
+
+    this._touch.moving = true;
 
     const { start, move } = this._touch.coordinates;
     if (!start.x || !start.y) return;
@@ -97,7 +100,7 @@ export const TouchMixin = (superclass) => class extends superclass {
 
   handleTouchEnd() {
     // Return if zooming
-    if (this._zoom.active) return;
+    if (this.zoomActive || !this._touch.moving) return;
 
     const { start, move } = this._touch.coordinates;
     if (!move.x || !move.y) return;
@@ -108,19 +111,13 @@ export const TouchMixin = (superclass) => class extends superclass {
     // Get diff from comparing start against final movement
     const xDiff = start.x - move.x;
 
-    // Get window size
+    // Get viewport width
     const vw = Math.max(document.documentElement.clientWidth,
       window.innerWidth || 0);
 
     // Differentiate swipes from drags
     const minSwipeDistance = Math.min(Math.max(vw / 6, 50), 250);
     const isSwipe = Math.abs(xDiff) > touchDuration * 0.65;
-
-    const imageElements = [
-      this.$.image,
-      this.$.previousImage,
-      this.$.nextImage
-    ];
 
     // If you pass a certain distance or velocity and distance...
     if (this.activeImage.nextImage &&
@@ -133,6 +130,11 @@ export const TouchMixin = (superclass) => class extends superclass {
       this._navigateToPreviousImage();
     } else {
       // Reset transforms
+      const imageElements = [
+        this.$.image,
+        this.$.previousImage,
+        this.$.nextImage
+      ];
       imageElements.forEach((image) => {
         image.style.transition = `transform ${this.transitionTime}ms`;
         image.style.transform = '';
@@ -142,7 +144,8 @@ export const TouchMixin = (superclass) => class extends superclass {
       });
     }
 
-    // Reset coordinates
+    // Reset properties
+    this._touch.moving = false;
     move.x = null;
     move.y = null;
   }

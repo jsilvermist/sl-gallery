@@ -24,7 +24,7 @@ export function getContainImageSize(imageWidth, imageHeight, areaWidth, areaHeig
       imageHeight = areaWidth / imageRatio;
     }
   }
-  return { imageWidth, imageHeight };
+  return { width: imageWidth, height: imageHeight };
 }
 
 export function zeroPad(num, size) {

@@ -220,6 +220,10 @@ class SLGallerySlideshowOverlay extends PolymerElement {
         value: true,
         reflectToAttribute: true,
       },
+      zoomActive: {
+        type: Boolean,
+        observer: '_zoomActiveChanged',
+      },
     };
   }
 
@@ -278,6 +282,11 @@ class SLGallerySlideshowOverlay extends PolymerElement {
     }
   }
 
+  _zoomActiveChanged(zoomActive) {
+    this.toolbarVisible = !zoomActive;
+    this.$.listenerBlocks.hidden = zoomActive;
+  }
+
   _toggleToolbar() {
     this.toolbarVisible = !this.toolbarVisible;
   }
@@ -291,6 +300,11 @@ class SLGallerySlideshowOverlay extends PolymerElement {
   }
 
   _resetSlideshow(event) {
+    if (this.zoomActive) {
+      this.dispatchEvent(new CustomEvent('reset-zoom'));
+      return;
+    }
+
     this.dispatchEvent(new CustomEvent('reset-slideshow'));
 
     // Prevent hover state from persisting after click
