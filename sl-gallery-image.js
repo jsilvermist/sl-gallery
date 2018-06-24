@@ -101,6 +101,7 @@ class SLGalleryImage extends PolymerElement {
     img.onload = () => {
       this.width = img.width;
       this.height = img.height;
+      this.dispatchEvent(new CustomEvent('dimensions-changed'));
       delete img.onload;
     }
     img.src = imageUrl;

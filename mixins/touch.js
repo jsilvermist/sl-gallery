@@ -77,20 +77,20 @@ export const TouchMixin = (superclass) => class extends superclass {
           this.$.nextImage.style.transform = `translateX(${-xDiff}px)`;
           this.$.image.style.transform = `translateX(${-xDiff}px)`;
         } else {
-          this.$.image.style.transform = `translateX(0px) scale(${scaleInt}.${scaleDec})`;
+          this.$.image.style.transform = `scale(${scaleInt}.${scaleDec})`;
           this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
         }
-        this.$.previousImage.style.transform = `translateX(0px)`;
+        this.$.previousImage.style.transform = '';
       } else {
         // Right swipe
         if (this.activeImage.previousImage) {
           this.$.previousImage.style.transform = `translateX(${-xDiff}px)`;
           this.$.image.style.transform = `translateX(${-xDiff}px)`;
         } else {
-          this.$.image.style.transform = `translateX(0px) scale(${scaleInt}.${scaleDec})`;
+          this.$.image.style.transform = `scale(${scaleInt}.${scaleDec})`;
           this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
         }
-        this.$.nextImage.style.transform = `translateX(0px)`;
+        this.$.nextImage.style.transform = '';
       }
     }
   }
@@ -136,7 +136,7 @@ export const TouchMixin = (superclass) => class extends superclass {
       imageElements.forEach((image) => {
         const transitionTime = 150;
         image.style.transition = `transform ${transitionTime}ms`;
-        image.style.transform = 'translateX(0)';
+        image.style.transform = '';
         setTimeout(() => {
           image.style.transition = '';
         }, transitionTime);

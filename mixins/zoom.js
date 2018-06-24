@@ -65,7 +65,7 @@ export const ZoomMixin = (superclass) => class extends superclass {
 
     if (this._zoom.scale === 1) {
       this._zoom.active = false;
-      this.style.cursor = 'unset';
+      this.style.cursor = '';
     } else {
       this._zoom.active = true;
       this.style.cursor = 'all-scroll';
