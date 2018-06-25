@@ -16,7 +16,8 @@ class SLGallerySlideshow extends PolymerElement {
           position: fixed;
           top: 0;
           left: 0;
-          height: 100vh;
+           /* Use 100% instead of 100vh to support mobile address bar resizing */
+          height: 100%;
           width: 100vw;
           z-index: 1;
           align-items: center;
@@ -41,9 +42,13 @@ class SLGallerySlideshow extends PolymerElement {
           --paper-spinner-stroke-width: 4px;
         }
 
+        .image-container {
+          height: 100%;
+        }
+
         .image-container iron-image {
           width: 100vw;
-          height: 100vh;
+          height: 100%;
         }
       </style>
 
