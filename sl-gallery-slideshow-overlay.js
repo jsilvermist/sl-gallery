@@ -21,7 +21,7 @@ class SLGallerySlideshowOverlay extends PolymerElement {
 
         app-toolbar,
         #listenerBlocks > div,
-        paper-icon-button#closeSlideshow {
+        #floatingButtons {
           will-change: transform, opacity;
           transition: top 0.35s ease, bottom 0.35s ease, right 0.35s ease,
                       opacity 0.35s ease, visibility 0.35s ease;
@@ -47,6 +47,10 @@ class SLGallerySlideshowOverlay extends PolymerElement {
           right: 0;
           background-color: rgba(0, 0, 0, 0.65);
           color: white;
+        }
+
+        app-toolbar [main-title] {
+          overflow: auto;
         }
 
         app-toolbar.header {
@@ -104,7 +108,7 @@ class SLGallerySlideshowOverlay extends PolymerElement {
 
         /* Buttons */
 
-        paper-icon-button#closeSlideshow,
+        #floatingButtons paper-icon-button,
         #listenerBlocks paper-icon-button {
           color: #fff;
           z-index: 2;
@@ -114,16 +118,23 @@ class SLGallerySlideshowOverlay extends PolymerElement {
           height: 48px;
         }
 
-        paper-icon-button#closeSlideshow {
+        #floatingButtons {
+          display: flex;
+          flex-direction: column;
           position: absolute;
           top: 8px;
           right: 8px;
           visibility: visible;
+          z-index: 2;
         }
 
-        :host([toolbar-visible]) paper-icon-button#closeSlideshow {
+        :host([toolbar-visible]) #floatingButtons {
           right: -48px;
           visibility: hidden;
+        }
+
+        #floatingButtons paper-icon-button:not(:first-of-type) {
+          margin-top: 8px;
         }
 
         #listenerBlocks paper-icon-button {
@@ -141,7 +152,7 @@ class SLGallerySlideshowOverlay extends PolymerElement {
         }
 
         @media (max-width: 600px) {
-          paper-icon-button#closeSlideshow {
+          #floatingButtons {
             top: 5px;
             right: 5px;
           }
@@ -165,6 +176,11 @@ class SLGallerySlideshowOverlay extends PolymerElement {
       <app-toolbar class="header">
         <div main-title>[[activeImage.title]]</div>
         <paper-icon-button
+            id="zoomTrigger"
+            icon="sl-gallery:zoom-in"
+            on-click="_zoomIn">
+        </paper-icon-button>
+        <paper-icon-button
             id="fullscreenToggle"
             icon="sl-gallery:fullscreen"
             on-click="_toggleFullscreen">
@@ -180,11 +196,25 @@ class SLGallerySlideshowOverlay extends PolymerElement {
       </app-toolbar>
 
       <!-- Expanded View -->
-      <paper-icon-button
-          id="closeSlideshow"
-          icon="sl-gallery:close"
-          on-click="_resetSlideshow">
-      </paper-icon-button>
+      <div id="floatingButtons">
+        <paper-icon-button
+            id="closeSlideshow"
+            icon="sl-gallery:close"
+            on-click="_resetSlideshow">
+        </paper-icon-button>
+        <paper-icon-button
+            hidden="[[!zoomActive]]"
+            id="zoomIn"
+            icon="sl-gallery:zoom-in"
+            on-click="_zoomIn">
+        </paper-icon-button>
+        <paper-icon-button
+            hidden="[[!zoomActive]]"
+            id="zoomOut"
+            icon="sl-gallery:zoom-out"
+            on-click="_zoomOut">
+        </paper-icon-button>
+      </div>
 
       <!-- Listener Overlays -->
       <div id="listenerBlocks">
@@ -317,6 +347,14 @@ class SLGallerySlideshowOverlay extends PolymerElement {
 
   _toggleFullscreen() {
     this.dispatchEvent(new CustomEvent('toggle-fullscreen'));
+  }
+
+  _zoomIn() {
+    this.dispatchEvent(new CustomEvent('zoom-in'));
+  }
+
+  _zoomOut() {
+    this.dispatchEvent(new CustomEvent('zoom-out'));
   }
 }
 

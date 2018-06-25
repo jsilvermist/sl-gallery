@@ -34,7 +34,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         }
 
         :host([zoom-active]) {
-          cursor: all-scroll;
+          cursor: move;
           cursor: -webkit-grab;
           cursor: grab;
         }
@@ -84,6 +84,8 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
           zoom-active="[[zoomActive]]"
           on-navigate-to-previous-image="_navigateToPreviousImage"
           on-navigate-to-next-image="_navigateToNextImage"
+          on-zoom-in="_handleZoomIn"
+          on-zoom-out="_handleZoomOut"
           on-reset-zoom="_resetZoom"
           on-reset-slideshow="_resetSlideshow"
           on-toggle-fullscreen="_toggleFullscreen">
@@ -344,11 +346,11 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       const image = this.$.image;
       const previousImage = this.$.previousImage;
       const dimensions = this._dimensions.previous;
-      let offset;
+      let offsetWidth;
       if (dimensions) {
-        offset = (dimensions.width + dimensions.offset) + 'px';
+        offsetWidth = (dimensions.width + dimensions.offsetWidth) + 'px';
       } else {
-        offset = '100vw';
+        offsetWidth = '100vw';
       }
 
       // Enable transitions
@@ -357,7 +359,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
       // Animate transition
       image.style.transform = 'translateX(100vw)';
-      previousImage.style.transform = `translateX(${offset})`;
+      previousImage.style.transform = `translateX(${offsetWidth})`;
 
       // Reset after transition
       setTimeout(() => {
@@ -377,11 +379,11 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       const image = this.$.image;
       const nextImage = this.$.nextImage;
       const dimensions = this._dimensions.next;
-      let offset;
+      let offsetWidth;
       if (dimensions) {
-        offset = -(dimensions.width + dimensions.offset) + 'px';
+        offsetWidth = -(dimensions.width + dimensions.offsetWidth) + 'px';
       } else {
-        offset = '-100vw';
+        offsetWidth = '-100vw';
       }
 
       // Enable transitions
@@ -390,7 +392,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
       // Animate transition
       image.style.transform = 'translateX(-100vw)';
-      nextImage.style.transform = `translateX(${offset})`;
+      nextImage.style.transform = `translateX(${offsetWidth})`;
 
       // Reset after transition
       setTimeout(() => {
@@ -404,19 +406,28 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
   _dimensionsChanged(dimensions) {
     if (dimensions.previous) {
-      // Offset previous image just off the edge of the screen
-      const offset = dimensions.previous.width + dimensions.previous.offset;
-      this.$.previousImage.style.left = `${-offset}px`;
+      // offsetWidth previous image just off the edge of the screen
+      const offsetWidth = dimensions.previous.width + dimensions.previous.offsetWidth;
+      this.$.previousImage.style.left = `${-offsetWidth}px`;
     } else {
       this.$.previousImage.style.left = '-100vw';
     }
 
     if (dimensions.next) {
-      // Offset next image just off the edge of the screen
-      const offset = dimensions.next.width + dimensions.next.offset;
-      this.$.nextImage.style.right = `${-offset}px`;
+      // offsetWidth next image just off the edge of the screen
+      const offsetWidth = dimensions.next.width + dimensions.next.offsetWidth;
+      this.$.nextImage.style.right = `${-offsetWidth}px`;
     } else {
       this.$.nextImage.style.right = '-100vw';
+    }
+
+    if (this.zoomActive) {
+      // Get window viewport size
+      const vw = Math.max(document.documentElement.clientWidth,
+        window.innerWidth || 0);
+      const vh = Math.max(document.documentElement.clientHeight,
+        window.innerHeight || 0);
+      this.updateZoomOrigin(vw / 2, vh / 2);
     }
   }
 
@@ -453,7 +464,8 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     const size = getContainImageSize(baseW, baseH, vw, vh);
 
     return {
-      offset: (vw - size.width) / 2,
+      offsetWidth: (vw - size.width) / 2,
+      offsetHeight: (vh - size.height) / 2,
       ...size,
     };
   }
@@ -481,6 +493,14 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       return true;
     }
     return false;
+  }
+
+  _handleZoomIn() {
+    this.zoomIn(0.50);
+  }
+
+  _handleZoomOut() {
+    this.zoomOut(0.50);
   }
 }
 

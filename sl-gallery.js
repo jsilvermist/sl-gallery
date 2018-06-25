@@ -182,7 +182,7 @@ class SLGallery extends PolymerElement {
     });
 
     // Manually call index changed when images change to update routes
-    this._activeIndexChanged(this._activeIndex);
+    this._updateActiveImage(this._activeIndex);
   }
 
   _activeChanged(active) {
@@ -191,6 +191,12 @@ class SLGallery extends PolymerElement {
   }
 
   _activeIndexChanged(index) {
+    // If an image exists at the current index position,
+    // set activeImage for slideshow
+    this._updateActiveImage(index);
+  }
+
+  _updateActiveImage(index) {
     if (index !== null && this._images && this._images[index]) {
       this.slideshow.activeImage = this._images[index];
     } else {

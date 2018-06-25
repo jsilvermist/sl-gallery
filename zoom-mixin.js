@@ -57,22 +57,22 @@ export const ZoomMixin = (superclass) => class extends superclass {
   handleWheel(event) {
     if (event.deltaY < 0 && this.activeImage.loaded) {
       // Handle scroll up
-      this.zoomIn(0.2, event.clientX, event.clientY);
+      this.zoomIn(0.25, event.clientX, event.clientY);
     } else {
       // Handle scroll down
-      this.zoomOut(0.2);
+      this.zoomOut(0.25);
     }
   }
 
   handleZoomClickStart(event) {
     if (this.zoomActive) {
       this.zoomClicked = true;
-      event.preventDefault();
       const { previous } = this._zoom.coordinates;
       if (event.touches && event.touches[0]) {
         previous.x = event.touches[0].clientX;
         previous.y = event.touches[0].clientY;
       } else {
+        event.preventDefault();
         previous.x = event.clientX;
         previous.y = event.clientY;
       }
@@ -131,21 +131,33 @@ export const ZoomMixin = (superclass) => class extends superclass {
     const dimensions = this._dimensions.current;
 
     // Handle max zoom for X axis
-    if (x > dimensions.width + dimensions.offset) {
-      center.x = dimensions.width + dimensions.offset;
-    } else if (x < dimensions.offset) {
-      center.x = dimensions.offset;
+    if (x > dimensions.width + dimensions.offsetWidth) {
+      center.x = dimensions.width + dimensions.offsetWidth;
+    } else if (x < dimensions.offsetWidth) {
+      center.x = dimensions.offsetWidth;
     } else {
       center.x = x;
     }
 
     // Handle max zoom for Y axis
-    if (y > dimensions.height + dimensions.offset) {
-      center.y = dimensions.height + dimensions.offset;
-    } else if (y < -dimensions.offset) {
-      center.y = -dimensions.offset;
+    if (y > dimensions.height + dimensions.offsetHeight) {
+      center.y = dimensions.height + dimensions.offsetHeight;
+    } else if (y < dimensions.offsetHeight) {
+      center.y = dimensions.offsetHeight;
     } else {
       center.y = y;
+    }
+
+    this.$.image.style.transformOrigin = `${center.x}px ${center.y}px`;
+  }
+
+  centerZoomOrigin() {
+    const { center } = this._zoom.coordinates;
+
+    if (!center.x || !center.y) {
+      const dimensions = this._dimensions.current;
+      center.x = (dimensions.width / 2) + dimensions.offsetWidth;
+      center.y = (dimensions.height / 2) + dimensions.offsetHeight;
     }
 
     this.$.image.style.transformOrigin = `${center.x}px ${center.y}px`;
@@ -161,7 +173,11 @@ export const ZoomMixin = (superclass) => class extends superclass {
 
       // Update zoom related properties
       this.zoomActive = true;
-      if (x && y) this.recenterZoom(x, y);
+      if (x && y) {
+        this.recenterZoom(x, y);
+      } else {
+        this.centerZoomOrigin();
+      }
       this.$.image.style.transform = `scale(${this._zoom.scale})`;
     }
   }
@@ -190,6 +206,7 @@ export const ZoomMixin = (superclass) => class extends superclass {
     this._zoom.coordinates.center.x = null;
     this._zoom.coordinates.center.y = null;
     this.$.image.style.transform = '';
+    this.$.image.style.transformOrigin = '';
   }
 
 }
