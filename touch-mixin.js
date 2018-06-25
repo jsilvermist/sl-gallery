@@ -147,9 +147,13 @@ export const TouchMixin = (superclass) => class extends superclass {
     }
 
     // Reset properties
+    this._resetTouch();
+  }
+
+  _resetTouch() {
     this._touch.moving = false;
-    move.x = null;
-    move.y = null;
+    this._touch.coordinates.move.x = null;
+    this._touch.coordinates.move.y = null;
   }
 
 }
