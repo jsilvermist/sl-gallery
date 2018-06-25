@@ -36,12 +36,12 @@ export const TouchMixin = (superclass) => class extends superclass {
     super.connectedCallback();
 
     // Handle touch
-    this.addEventListener('touchstart', this.handleTouchStart);
-    this.addEventListener('touchmove', this.handleTouchMove);
-    this.addEventListener('touchend', this.handleTouchEnd);
+    this.addEventListener('touchstart', this._handleTouchStart);
+    this.addEventListener('touchmove', this._handleTouchMove);
+    this.addEventListener('touchend', this._handleTouchEnd);
   }
 
-  handleTouchStart(event) {
+  _handleTouchStart(event) {
     // Return if zooming
     if (this.zoomActive) return;
 
@@ -52,7 +52,7 @@ export const TouchMixin = (superclass) => class extends superclass {
     this._touch.startTime = performance.now();
   }
 
-  handleTouchMove(event) {
+  _handleTouchMove(event) {
     // Return if zooming
     if (this.zoomActive) return;
 
@@ -68,9 +68,9 @@ export const TouchMixin = (superclass) => class extends superclass {
     const xDiff = start.x - move.x;
     const yDiff = start.y - move.y;
 
-    // Scale expiramenting
+    // Start/End bounceback effects (scale)
     const scaleInt = 1 + Math.floor(Math.abs(xDiff) / 1000);
-    const scaleDec = zeroPad(Math.abs(xDiff).toString().slice(-3), 3);
+    const scaleDec = zeroPad(Math.abs(xDiff).toFixed().toString().slice(-3), 3);
 
     // Movement is larger along the X axis than Y axis
     if (Math.abs(xDiff) > Math.abs(yDiff)) {
@@ -80,6 +80,7 @@ export const TouchMixin = (superclass) => class extends superclass {
           this.$.nextImage.style.transform = `translateX(${-xDiff}px)`;
           this.$.image.style.transform = `translateX(${-xDiff}px)`;
         } else {
+          // End bounceback effect
           this.$.image.style.transform = `scale(${scaleInt}.${scaleDec})`;
           this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
         }
@@ -90,6 +91,7 @@ export const TouchMixin = (superclass) => class extends superclass {
           this.$.previousImage.style.transform = `translateX(${-xDiff}px)`;
           this.$.image.style.transform = `translateX(${-xDiff}px)`;
         } else {
+          // Start bounceback effect
           this.$.image.style.transform = `scale(${scaleInt}.${scaleDec})`;
           this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
         }
@@ -98,7 +100,7 @@ export const TouchMixin = (superclass) => class extends superclass {
     }
   }
 
-  handleTouchEnd() {
+  _handleTouchEnd() {
     // Return if zooming
     if (this.zoomActive || !this._touch.moving) return;
 
@@ -121,11 +123,11 @@ export const TouchMixin = (superclass) => class extends superclass {
 
     // If you pass a certain distance or velocity and distance...
     if (this.activeImage.nextImage &&
-        (xDiff > vw / 4 || (xDiff > minSwipeDistance && isSwipe))) {
+        (xDiff > vw / 3 || (xDiff > minSwipeDistance && isSwipe))) {
       // Navigate to next image
       this._navigateToNextImage();
     } else if (this.activeImage.previousImage &&
-        (xDiff < -(vw / 4) || (xDiff < -minSwipeDistance && isSwipe))) {
+        (xDiff < -(vw / 3) || (xDiff < -minSwipeDistance && isSwipe))) {
       // Navigate to previous image
       this._navigateToPreviousImage();
     } else {

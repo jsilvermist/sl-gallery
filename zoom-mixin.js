@@ -45,26 +45,26 @@ export const ZoomMixin = (superclass) => class extends superclass {
     super.connectedCallback();
 
     // Handle zoom
-    this.addEventListener('wheel', this.handleWheel);
-    this.addEventListener('touchstart', this.handleZoomClickStart);
-    this.addEventListener('mousedown', this.handleZoomClickStart);
-    this.addEventListener('touchmove', this.handleZoomClickMove);
-    this.addEventListener('mousemove', this.handleZoomClickMove);
-    this.addEventListener('touchend', this.handleZoomClickEnd);
-    this.addEventListener('mouseup', this.handleZoomClickEnd);
+    this.addEventListener('wheel', this._handleWheelZoom);
+    this.addEventListener('touchstart', this._handleZoomClickStart);
+    this.addEventListener('mousedown', this._handleZoomClickStart);
+    this.addEventListener('touchmove', this._handleZoomClickMove);
+    this.addEventListener('mousemove', this._handleZoomClickMove);
+    this.addEventListener('touchend', this._handleZoomClickEnd);
+    this.addEventListener('mouseup', this._handleZoomClickEnd);
   }
 
-  handleWheel(event) {
+  _handleWheelZoom(event) {
     if (event.deltaY < 0 && this.activeImage.loaded) {
       // Handle scroll up
-      this.zoomIn(0.25, event.clientX, event.clientY);
+      this._zoomIn(0.25, event.clientX, event.clientY);
     } else {
       // Handle scroll down
-      this.zoomOut(0.25);
+      this._zoomOut(0.25);
     }
   }
 
-  handleZoomClickStart(event) {
+  _handleZoomClickStart(event) {
     if (this.zoomActive) {
       this.zoomClicked = true;
       const { previous } = this._zoom.coordinates;
@@ -79,7 +79,7 @@ export const ZoomMixin = (superclass) => class extends superclass {
     }
   }
 
-  handleZoomClickMove(event) {
+  _handleZoomClickMove(event) {
     if (this.zoomActive) {
       event.preventDefault();
       const { center, previous } = this._zoom.coordinates;
@@ -102,17 +102,17 @@ export const ZoomMixin = (superclass) => class extends superclass {
       const newX = center.x + (xDiff * 2 / this._zoom.scale);
       const newY = center.y + (yDiff * 2 / this._zoom.scale);
 
-      this.updateZoomOrigin(newX, newY);
+      this._updateZoomOrigin(newX, newY);
     }
   }
 
-  handleZoomClickEnd() {
+  _handleZoomClickEnd() {
     if (this.zoomActive) {
       this.zoomClicked = false;
     }
   }
 
-  recenterZoom(x, y) {
+  _recenterZoom(x, y) {
     const { center } = this._zoom.coordinates;
     let newX, newY;
     if (this._zoom.scale > 1) {
@@ -123,10 +123,10 @@ export const ZoomMixin = (superclass) => class extends superclass {
       newY = y;
     }
 
-    this.updateZoomOrigin(newX, newY);
+    this._updateZoomOrigin(newX, newY);
   }
 
-  updateZoomOrigin(x, y) {
+  _updateZoomOrigin(x, y) {
     const { center } = this._zoom.coordinates;
     const dimensions = this._dimensions.current;
 
@@ -151,7 +151,7 @@ export const ZoomMixin = (superclass) => class extends superclass {
     this.$.image.style.transformOrigin = `${center.x}px ${center.y}px`;
   }
 
-  centerZoomOrigin() {
+  _centerZoomOrigin() {
     const { center } = this._zoom.coordinates;
 
     if (!center.x || !center.y) {
@@ -163,7 +163,7 @@ export const ZoomMixin = (superclass) => class extends superclass {
     this.$.image.style.transformOrigin = `${center.x}px ${center.y}px`;
   }
 
-  zoomIn(increase, x, y) {
+  _zoomIn(increase, x, y) {
     if (this._zoom.scale < this._zoom.max) {
       if (this._zoom.scale + increase < this._zoom.max) {
         this._zoom.scale = this._zoom.scale + increase;
@@ -174,15 +174,15 @@ export const ZoomMixin = (superclass) => class extends superclass {
       // Update zoom related properties
       this.zoomActive = true;
       if (x && y) {
-        this.recenterZoom(x, y);
+        this._recenterZoom(x, y);
       } else {
-        this.centerZoomOrigin();
+        this._centerZoomOrigin();
       }
       this.$.image.style.transform = `scale(${this._zoom.scale})`;
     }
   }
 
-  zoomOut(decrease) {
+  _zoomOut(decrease) {
     if (this._zoom.scale > this._zoom.min) {
       if (this._zoom.scale - decrease > this._zoom.min) {
         this._zoom.scale = this._zoom.scale - decrease;
@@ -197,6 +197,14 @@ export const ZoomMixin = (superclass) => class extends superclass {
         this._resetZoom();
       }
     }
+  }
+
+  _handleZoomIn() {
+    this._zoomIn(0.50);
+  }
+
+  _handleZoomOut() {
+    this._zoomOut(0.50);
   }
 
   _resetZoom() {

@@ -427,7 +427,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         window.innerWidth || 0);
       const vh = Math.max(document.documentElement.clientHeight,
         window.innerHeight || 0);
-      this.updateZoomOrigin(vw / 2, vh / 2);
+      this._updateZoomOrigin(vw / 2, vh / 2);
     }
   }
 
@@ -493,14 +493,6 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       return true;
     }
     return false;
-  }
-
-  _handleZoomIn() {
-    this.zoomIn(0.50);
-  }
-
-  _handleZoomOut() {
-    this.zoomOut(0.50);
   }
 }
 
