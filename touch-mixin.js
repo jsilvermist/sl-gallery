@@ -68,7 +68,7 @@ export const TouchMixin = (superclass) => class extends superclass {
     const xDiff = start.x - move.x;
     const yDiff = start.y - move.y;
 
-    // Start/End bounceback effects (scale)
+    // First/Last image bounceback effects (scale)
     const scaleInt = 1 + Math.floor(Math.abs(xDiff) / 1000);
     const scaleDec = zeroPad(Math.abs(xDiff).toFixed().toString().slice(-3), 3);
 
@@ -77,10 +77,11 @@ export const TouchMixin = (superclass) => class extends superclass {
       if (xDiff >= 0) {
         // Left swipe
         if (this.activeImage.nextImage) {
+          // Move images by touch distance
           this.$.nextImage.style.transform = `translateX(${-xDiff}px)`;
           this.$.image.style.transform = `translateX(${-xDiff}px)`;
         } else {
-          // End bounceback effect
+          // Last image bounceback effect (scale)
           this.$.image.style.transform = `scale(${scaleInt}.${scaleDec})`;
           this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
         }
@@ -88,10 +89,11 @@ export const TouchMixin = (superclass) => class extends superclass {
       } else {
         // Right swipe
         if (this.activeImage.previousImage) {
+          // Move images by touch distance
           this.$.previousImage.style.transform = `translateX(${-xDiff}px)`;
           this.$.image.style.transform = `translateX(${-xDiff}px)`;
         } else {
-          // Start bounceback effect
+          // First image bounceback effect (scale)
           this.$.image.style.transform = `scale(${scaleInt}.${scaleDec})`;
           this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
         }
