@@ -271,8 +271,8 @@ class SLGallerySlideshowOverlay extends PolymerElement {
       // Listen for entering/exiting fullscreen
       fullscreen.addListener('change', this._fullscreenChanged);
     } else {
-      // Remove fullscreen button if not supported
-      this.$.fullscreenToggle.parentNode.removeChild(this.$.fullscreenToggle);
+      // Hide fullscreen button if not supported
+      this.$.fullscreenToggle.hidden = true;
     }
   }
 
