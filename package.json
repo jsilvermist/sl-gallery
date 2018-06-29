@@ -4,7 +4,7 @@
   "version": "2.3.1",
   "main": "sl-gallery.js",
   "files": [
-    "sl-gallery*.js"
+    "*.js"
   ],
   "scripts": {
     "lint": "polymer lint",
