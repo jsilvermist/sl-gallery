@@ -400,36 +400,6 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     }, this.transitionTime);
   }
 
-  _dimensionsChanged(dimensions) {
-    // Ensure slideshow resizes with address bar on mobile
-    const vh = Math.max(document.documentElement.clientHeight,
-      window.innerHeight || 0);
-    this.style.height = `${vh}px`;
-
-    if (dimensions.previous) {
-      // offsetWidth previous image just off the edge of the screen
-      const offsetWidth = dimensions.previous.width + dimensions.previous.offsetWidth;
-      this.$.previousImage.style.left = `${-offsetWidth}px`;
-    } else {
-      this.$.previousImage.style.left = '-100vw';
-    }
-
-    if (dimensions.next) {
-      // offsetWidth next image just off the edge of the screen
-      const offsetWidth = dimensions.next.width + dimensions.next.offsetWidth;
-      this.$.nextImage.style.right = `${-offsetWidth}px`;
-    } else {
-      this.$.nextImage.style.right = '-100vw';
-    }
-
-    if (this.zoomActive) {
-      // Get window viewport size
-      const vw = Math.max(document.documentElement.clientWidth,
-        window.innerWidth || 0);
-      this._updateZoomOrigin(vw / 2, vh / 2);
-    }
-  }
-
   _generateDimensions() {
     if (!this.active || !this.activeImage) return;
 
@@ -474,6 +444,36 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     this._generateDimensions();
     event.currentTarget.removeEventListener('dimensions-changed',
       this._recalculateOnDimensionsChanged);
+  }
+
+  _dimensionsChanged(dimensions) {
+    // Ensure slideshow resizes with address bar on mobile
+    const vh = Math.max(document.documentElement.clientHeight,
+      window.innerHeight || 0);
+    this.style.height = `${vh}px`;
+
+    if (dimensions.previous) {
+      // offsetWidth previous image just off the edge of the screen
+      const offsetWidth = dimensions.previous.width + dimensions.previous.offsetWidth;
+      this.$.previousImage.style.left = `${-offsetWidth}px`;
+    } else {
+      this.$.previousImage.style.left = '-100vw';
+    }
+
+    if (dimensions.next) {
+      // offsetWidth next image just off the edge of the screen
+      const offsetWidth = dimensions.next.width + dimensions.next.offsetWidth;
+      this.$.nextImage.style.right = `${-offsetWidth}px`;
+    } else {
+      this.$.nextImage.style.right = '-100vw';
+    }
+
+    if (this.zoomActive) {
+      // Get window viewport size
+      const vw = Math.max(document.documentElement.clientWidth,
+        window.innerWidth || 0);
+      this._updateZoomOrigin(vw / 2, vh / 2);
+    }
   }
 
   _toggleFullscreen() {
