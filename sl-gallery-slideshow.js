@@ -176,8 +176,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     super();
 
     // Bind handlers to `this` to allow easy listener removal
-    this._generateDimensions = this._generateDimensions.bind(this);
-    this._recalculateOnDimensionsChanged = this._recalculateOnDimensionsChanged.bind(this);
+    this._updateDimensions = this._updateDimensions.bind(this);
   }
 
   connectedCallback() {
@@ -190,7 +189,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     this.addEventListener('keydown', this._handleKeydown);
 
     // Recalculate dimensions for iron-images on resize
-    window.addEventListener('resize', this._generateDimensions);
+    window.addEventListener('resize', this._updateDimensions);
   }
 
   disconnectedCallback() {
@@ -198,7 +197,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
     // Clean up event listeners on disconnect
     this.removeEventListener('keydown', this._handleKeydown);
-    window.removeEventListener('resize', this._generateDimensions);
+    window.removeEventListener('resize', this._updateDimensions);
   }
 
   _handleKeydown(event) {
@@ -274,7 +273,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       this._transitioning = false;
 
       // Get dimensions for transitioning images
-      this._generateDimensions();
+      this._updateDimensions();
     } else {
       // Close if not active, or if activeImage is undefined
       this._opened = false;
@@ -400,50 +399,70 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     }, this.transitionTime);
   }
 
-  _generateDimensions() {
+  _updateDimensions() {
     if (!this.active || !this.activeImage) return;
 
     // Get all active view image dimensions
-    const current = this._getViewImageDimensions(this.activeImage);
-    const previous = this._getViewImageDimensions(this.activeImage.previousImage);
-    const next = this._getViewImageDimensions(this.activeImage.nextImage);
+    const current = this._getImageDimensions(this.activeImage);
+    const previous = this._getImageDimensions(this.activeImage.previousImage);
+    const next = this._getImageDimensions(this.activeImage.nextImage);
 
     // Set dimensions object, trigger observer
-    this._dimensions = { current, previous, next };
+    Promise.all([current, previous, next])
+    .then((values) => {
+      this._dimensions = {
+        current: values[0],
+        previous: values[1],
+        next: values[2],
+      };
+    });
   }
 
-  _getViewImageDimensions(image) {
-    if (!image) return undefined;
+  _getImageDimensions(image) {
+    return new Promise((resolve, reject) => {
+      if (!image) {
+        resolve(undefined);
+        return;
+      }
 
-    // Get window viewport size
-    const vw = Math.max(document.documentElement.clientWidth,
-      window.innerWidth || 0);
-    const vh = Math.max(document.documentElement.clientHeight,
-      window.innerHeight || 0);
+      this._getBaseImageSize(image)
+      .then((base) => {
+        // Get window viewport size
+        const vw = Math.max(document.documentElement.clientWidth,
+          window.innerWidth || 0);
+        const vh = Math.max(document.documentElement.clientHeight,
+          window.innerHeight || 0);
 
-    const baseW = image.width;
-    const baseH = image.height;
-    if (!baseW || !baseH) {
-      image.addEventListener('dimensions-changed',
-        this._recalculateOnDimensionsChanged);
-      return undefined;
-    }
+        // Get size of contain styled image in view
+        const size = getContainImageSize(base.width, base.height, vw, vh);
 
-    // Get size of contain styled image in view
-    const size = getContainImageSize(baseW, baseH, vw, vh);
-
-    return {
-      offsetWidth: (vw - size.width) / 2,
-      offsetHeight: (vh - size.height) / 2,
-      ...size,
-    };
+        resolve({
+          offsetWidth: (vw - size.width) / 2,
+          offsetHeight: (vh - size.height) / 2,
+          ...size,
+        });
+      });
+    });
   }
 
-  _recalculateOnDimensionsChanged(event) {
-    // Used for recursive call if dimensions aren't ready
-    this._generateDimensions();
-    event.currentTarget.removeEventListener('dimensions-changed',
-      this._recalculateOnDimensionsChanged);
+  _getBaseImageSize(image) {
+    return new Promise((resolve, reject) => {
+      if (!image.width || !image.height) {
+        const waitForDimensions = (event) => {
+          image.removeEventListener('dimensions-changed', waitForDimensions);
+          resolve({
+            width: image.width,
+            height: image.height,
+          });
+        };
+        image.addEventListener('dimensions-changed', waitForDimensions);
+      } else {
+        resolve({
+          width: image.width,
+          height: image.height,
+        });
+      }
+    });
   }
 
   _dimensionsChanged(dimensions) {
