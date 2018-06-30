@@ -402,14 +402,9 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
   _dimensionsChanged(dimensions) {
     // Ensure slideshow resizes with address bar on mobile
-    // [TODO]: Refactor this
-    if (dimensions.current) {
-      const vh = Math.max(document.documentElement.clientHeight,
-        window.innerHeight || 0);
-      this.style.height = `${vh}px`;
-    } else {
-      this.style.height = '-100vw';
-    }
+    const vh = Math.max(document.documentElement.clientHeight,
+      window.innerHeight || 0);
+    this.style.height = `${vh}px`;
 
     if (dimensions.previous) {
       // offsetWidth previous image just off the edge of the screen
@@ -431,8 +426,6 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       // Get window viewport size
       const vw = Math.max(document.documentElement.clientWidth,
         window.innerWidth || 0);
-      const vh = Math.max(document.documentElement.clientHeight,
-        window.innerHeight || 0);
       this._updateZoomOrigin(vw / 2, vh / 2);
     }
   }
