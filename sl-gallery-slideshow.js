@@ -370,7 +370,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
   _transitionToNewImage({dimensions, index, newImage, negative}) {
     // Get offsets for image transitions
-    const offsets = {};
+    const offsets = new Object();
     if (dimensions) {
       offsets.new = dimensions.width + dimensions.offsetWidth;
       offsets.current =
@@ -447,10 +447,18 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   }
 
   _dimensionsChanged(dimensions) {
-    // Ensure slideshow resizes with address bar on mobile
+    // Get window viewport size
+    const vw = Math.max(document.documentElement.clientWidth,
+      window.innerWidth || 0);
     const vh = Math.max(document.documentElement.clientHeight,
       window.innerHeight || 0);
+
+    // Ensure slideshow resizes with address bar on mobile
     this.style.height = `${vh}px`;
+
+    if (this.zoomActive) {
+      this._updateZoomOrigin(vw / 2, vh / 2);
+    }
 
     if (dimensions.previous) {
       // offsetWidth previous image just off the edge of the screen
@@ -466,13 +474,6 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       this.$.nextImage.style.right = `${-offsetWidth}px`;
     } else {
       this.$.nextImage.style.right = '-100vw';
-    }
-
-    if (this.zoomActive) {
-      // Get window viewport size
-      const vw = Math.max(document.documentElement.clientWidth,
-        window.innerWidth || 0);
-      this._updateZoomOrigin(vw / 2, vh / 2);
     }
   }
 
