@@ -347,65 +347,57 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   _navigateToPreviousImage() {
     if (this.activeImage.hasPreviousImage && !this._transitioning) {
       this._transitioning = true;
-      const image = this.$.image;
-      const previousImage = this.$.previousImage;
-      const dimensions = this._dimensions.previous;
-      let offsetWidth;
-      if (dimensions) {
-        offsetWidth = (dimensions.width + dimensions.offsetWidth) + 'px';
-      } else {
-        offsetWidth = '100vw';
-      }
-
-      // Enable transitions
-      image.style.transition = `transform ${this.transitionTime}ms`;
-      previousImage.style.transition = `transform ${this.transitionTime}ms`;
-
-      // Animate transition
-      image.style.transform = 'translateX(100vw)';
-      previousImage.style.transform = `translateX(${offsetWidth})`;
-
-      // Reset after transition
-      setTimeout(() => {
-        // Disable transitions
-        image.style.transition = '';
-        previousImage.style.transition = '';
-        window.location.hash =
-          `/${this.gallery.prefix}/${this.activeImage.previousImage.index}`;
-        this._transitioning = false;
-      }, this.transitionTime);
+      this._transitionToNewImage({
+        dimensions: this._dimensions.previous,
+        index: this.activeImage.previousImage.index,
+        newImage: this.$.previousImage,
+        negative: false,
+      });
     }
   }
 
   _navigateToNextImage() {
     if (this.activeImage.hasNextImage && !this._transitioning) {
       this._transitioning = true;
-      const image = this.$.image;
-      const nextImage = this.$.nextImage;
-      const dimensions = this._dimensions.next;
-      let offsetWidth;
-      if (dimensions) {
-        offsetWidth = -(dimensions.width + dimensions.offsetWidth) + 'px';
-      } else {
-        offsetWidth = '-100vw';
-      }
-
-      // Enable transitions
-      image.style.transition = `transform ${this.transitionTime}ms`;
-      nextImage.style.transition = `transform ${this.transitionTime}ms`;
-
-      // Animate transition
-      image.style.transform = 'translateX(-100vw)';
-      nextImage.style.transform = `translateX(${offsetWidth})`;
-
-      // Reset after transition
-      setTimeout(() => {
-        image.style.transition = '';
-        nextImage.style.transition = '';
-        window.location.hash =
-          `/${this.gallery.prefix}/${this.activeImage.nextImage.index}`;
-      }, this.transitionTime);
+      this._transitionToNewImage({
+        dimensions: this._dimensions.next,
+        index: this.activeImage.nextImage.index,
+        newImage: this.$.nextImage,
+        negative: true,
+      });
     }
+  }
+
+  _transitionToNewImage({dimensions, index, newImage, negative}) {
+    // Get offsets for image transitions
+    const offsets = {};
+    if (dimensions) {
+      offsets.new = dimensions.width + dimensions.offsetWidth;
+      offsets.current =
+        this._dimensions.current.width + this._dimensions.current.offsetWidth;
+      if (negative) {
+        offsets.new = -offsets.new;
+        offsets.current = -offsets.current;
+      }
+    }
+
+    // Enable transitions
+    newImage.style.transition = `transform ${this.transitionTime}ms`;
+    this.$.image.style.transition = `transform ${this.transitionTime}ms`;
+
+    // Animate transition
+    newImage.style.transform = `translateX(${offsets.new}px)`;
+    this.$.image.style.transform = `translateX(${offsets.current}px)`;
+
+    // Reset after transition
+    setTimeout(() => {
+      // Disable transitions
+      newImage.style.transition = '';
+      this.$.image.style.transition = '';
+
+      // Update hash and change image to new image
+      window.location.hash = `/${this.gallery.prefix}/${index}`;
+    }, this.transitionTime);
   }
 
   _dimensionsChanged(dimensions) {
