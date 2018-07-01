@@ -338,7 +338,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       const id = event.target.id;
 
       // activeImage could be undefined if the image takes too long to load
-      if (this.activeImage) {
+      if (this.activeImage && this.activeImage[id]) {
         if (!this.activeImage[id].loaded) {
           this.activeImage[id].reference = this.$[id].shadowRoot.querySelector('img');
           this.activeImage[id].loaded = true;
