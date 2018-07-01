@@ -114,12 +114,12 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         </iron-image>
         <iron-image
             id="image"
-            src="[[_viewImage.src]]"
+            src="[[_currentImage.src]]"
             alt=""
             preload
             fade
             sizing="contain"
-            placeholder="[[_viewImage.small]]"
+            placeholder="[[_currentImage.small]]"
             on-loaded-changed="_handleImageLoaded"
             on-error-changed="_imageErrorChanged">
         </iron-image>
@@ -161,7 +161,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         observer: '_openedChanged',
       },
       _spinnerActive: Boolean,
-      _viewImage: Object,
+      _currentImage: Object,
       _previousImage: Object,
       _nextImage: Object,
       _dimensions: {
@@ -278,7 +278,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       this._spinnerActive = !this.activeImage.loaded;
 
       // Update images in iron-image view elements
-      this._viewImage = this.activeImage;
+      this._currentImage = this.activeImage;
 
       // Reset transforms to snap new image into place
       this.$.image.style.transform = '';
@@ -301,7 +301,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
     this._exitFullscreen();
 
-    this._viewImage = undefined;
+    this._currentImage = undefined;
     this._previousImage = undefined;
     this._nextImage = undefined;
 
