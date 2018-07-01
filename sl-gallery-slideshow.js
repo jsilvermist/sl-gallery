@@ -167,16 +167,22 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       _dimensions: {
         type: Object,
         value: () => new Object(),
-        observer: '_dimensionsChanged',
       },
     };
+  }
+
+  static get observers() {
+    return [
+      '_dimensionsPreviousChanged(_dimensions.previous)',
+      '_dimensionsNextChanged(_dimensions.next)',
+    ];
   }
 
   constructor() {
     super();
 
     // Bind handlers to `this` to allow easy listener removal
-    this._updateDimensions = this._updateDimensions.bind(this);
+    this._handleResize = this._handleResize.bind(this);
   }
 
   connectedCallback() {
@@ -189,7 +195,8 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     this.addEventListener('keydown', this._handleKeydown);
 
     // Recalculate dimensions for iron-images on resize
-    window.addEventListener('resize', this._updateDimensions);
+    window.addEventListener('resize', this._handleResize);
+    this._handleResize();
   }
 
   disconnectedCallback() {
@@ -197,7 +204,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
     // Clean up event listeners on disconnect
     this.removeEventListener('keydown', this._handleKeydown);
-    window.removeEventListener('resize', this._updateDimensions);
+    window.removeEventListener('resize', this._handleResize);
   }
 
   _handleKeydown(event) {
@@ -228,12 +235,21 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     }
   }
 
+  _handleResize() {
+    // Update dimensions on resize
+    this._updateSlideshowDimensions();
+    this._updateImageDimensions();
+  }
+
   _activeImageChanged(activeImage) {
     // Update view images and elements
     this._updateView(this.active, activeImage);
   }
 
   _activeChanged(active) {
+    // Update in case of resize while inactive
+    this._updateSlideshowDimensions();
+
     // Update view images and elements
     this._updateView(active, this.activeImage);
   }
@@ -256,7 +272,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       this._opened = true;
 
       // Reset and deactivate zoom
-      this._resetZoom()
+      this._resetZoom();
 
       // Display spinner if image hasn't been loaded
       this._spinnerActive = !this.activeImage.loaded;
@@ -273,7 +289,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       this._transitioning = false;
 
       // Get dimensions for transitioning images
-      this._updateDimensions();
+      this._updateImageDimensions();
     } else {
       // Close if not active, or if activeImage is undefined
       this._opened = false;
@@ -368,9 +384,14 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   }
 
   _transitionToNewImage({dimensions, index, newImage, negative}) {
-    // Get offsets for image transitions
-    const offsets = new Object();
-    if (dimensions) {
+    let transitionTime = 0;
+
+    if (dimensions && this._dimensions.current) {
+      // Set transitionTime when transitioning
+      transitionTime = this.transitionTime;
+
+      // Get offsets for image transitions
+      const offsets = new Object();
       offsets.new = dimensions.width + dimensions.offsetWidth;
       offsets.current =
         this._dimensions.current.width + this._dimensions.current.offsetWidth;
@@ -378,15 +399,15 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         offsets.new = -offsets.new;
         offsets.current = -offsets.current;
       }
+
+      // Enable transitions
+      newImage.style.transition = `transform ${this.transitionTime}ms`;
+      this.$.image.style.transition = `transform ${this.transitionTime}ms`;
+
+      // Animate transition
+      newImage.style.transform = `translateX(${offsets.new}px)`;
+      this.$.image.style.transform = `translateX(${offsets.current}px)`;
     }
-
-    // Enable transitions
-    newImage.style.transition = `transform ${this.transitionTime}ms`;
-    this.$.image.style.transition = `transform ${this.transitionTime}ms`;
-
-    // Animate transition
-    newImage.style.transform = `translateX(${offsets.new}px)`;
-    this.$.image.style.transform = `translateX(${offsets.current}px)`;
 
     // Reset after transition
     setTimeout(() => {
@@ -396,26 +417,39 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
       // Update hash and change image to new image
       window.location.hash = `/${this.gallery.prefix}/${index}`;
-    }, this.transitionTime);
+    }, transitionTime);
   }
 
-  _updateDimensions() {
-    if (!this.active || !this.activeImage) return;
+  _updateSlideshowDimensions() {
+    if (this.active) {
+      // Get window viewport size
+      const vw = Math.max(document.documentElement.clientWidth,
+        window.innerWidth || 0);
+      const vh = Math.max(document.documentElement.clientHeight,
+        window.innerHeight || 0);
 
-    // Get all active view image dimensions
-    const current = this._getImageDimensions(this.activeImage);
-    const previous = this._getImageDimensions(this.activeImage.previousImage);
-    const next = this._getImageDimensions(this.activeImage.nextImage);
+      // Ensure slideshow resizes with address bar on mobile
+      this.style.height = `${vh}px`;
 
-    // Set dimensions object, trigger observer
-    Promise.all([current, previous, next])
-    .then((values) => {
-      this._dimensions = {
-        current: values[0],
-        previous: values[1],
-        next: values[2],
-      };
-    });
+      // [TODO]: Is this a good idea?
+      if (this.zoomActive) {
+        this._updateZoomOrigin(vw / 2, vh / 2);
+      }
+    }
+  }
+
+  _updateImageDimensions() {
+    if (this.active && this.activeImage) {
+      // Get all active view image dimensions
+      this._getImageDimensions(this.activeImage)
+        .then((dimensions) => this._dimensions.current = dimensions);
+
+      this._getImageDimensions(this.activeImage.previousImage)
+        .then((dimensions) => this._dimensions.previous = dimensions);
+
+      this._getImageDimensions(this.activeImage.nextImage)
+        .then((dimensions) => this._dimensions.next = dimensions);
+    }
   }
 
   _getImageDimensions(image) {
@@ -426,22 +460,22 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       }
 
       this._getBaseImageSize(image)
-      .then((base) => {
-        // Get window viewport size
-        const vw = Math.max(document.documentElement.clientWidth,
-          window.innerWidth || 0);
-        const vh = Math.max(document.documentElement.clientHeight,
-          window.innerHeight || 0);
+        .then((base) => {
+          // Get window viewport size
+          const vw = Math.max(document.documentElement.clientWidth,
+            window.innerWidth || 0);
+          const vh = Math.max(document.documentElement.clientHeight,
+            window.innerHeight || 0);
 
-        // Get size of contain styled image in view
-        const size = getContainImageSize(base.width, base.height, vw, vh);
+          // Get size of contain styled image in view
+          const size = getContainImageSize(base.width, base.height, vw, vh);
 
-        resolve({
-          offsetWidth: (vw - size.width) / 2,
-          offsetHeight: (vh - size.height) / 2,
-          ...size,
+          resolve({
+            offsetWidth: (vw - size.width) / 2,
+            offsetHeight: (vh - size.height) / 2,
+            ...size,
+          });
         });
-      });
     });
   }
 
@@ -465,31 +499,20 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     });
   }
 
-  _dimensionsChanged(dimensions) {
-    // Get window viewport size
-    const vw = Math.max(document.documentElement.clientWidth,
-      window.innerWidth || 0);
-    const vh = Math.max(document.documentElement.clientHeight,
-      window.innerHeight || 0);
-
-    // Ensure slideshow resizes with address bar on mobile
-    this.style.height = `${vh}px`;
-
-    if (this.zoomActive) {
-      this._updateZoomOrigin(vw / 2, vh / 2);
-    }
-
-    if (dimensions.previous) {
+  _dimensionsPreviousChanged(previous) {
+    if (previous) {
       // offsetWidth previous image just off the edge of the screen
-      const offsetWidth = dimensions.previous.width + dimensions.previous.offsetWidth;
+      const offsetWidth = previous.width + previous.offsetWidth;
       this.$.previousImage.style.left = `${-offsetWidth}px`;
     } else {
       this.$.previousImage.style.left = '-100vw';
     }
+  }
 
-    if (dimensions.next) {
+  _dimensionsNextChanged(next) {
+    if (next) {
       // offsetWidth next image just off the edge of the screen
-      const offsetWidth = dimensions.next.width + dimensions.next.offsetWidth;
+      const offsetWidth = next.width + next.offsetWidth;
       this.$.nextImage.style.right = `${-offsetWidth}px`;
     } else {
       this.$.nextImage.style.right = '-100vw';
