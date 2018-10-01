@@ -196,7 +196,6 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
     // Recalculate dimensions for iron-images on resize
     window.addEventListener('resize', this._handleResize);
-    this._handleResize();
   }
 
   disconnectedCallback() {
@@ -247,8 +246,10 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   }
 
   _activeChanged(active) {
-    // Update in case of resize while inactive
-    this._updateSlideshowDimensions();
+    if (active) {
+      // Update in case of resize while inactive
+      this._updateSlideshowDimensions();
+    }
 
     // Update view images and elements
     this._updateView(active, this.activeImage);
@@ -442,13 +443,13 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
     if (this.active && this.activeImage) {
       // Get all active view image dimensions
       this._getImageDimensions(this.activeImage)
-        .then((dimensions) => this._dimensions.current = dimensions);
+        .then((dimensions) => this.set('_dimensions.current', dimensions));
 
       this._getImageDimensions(this.activeImage.previousImage)
-        .then((dimensions) => this._dimensions.previous = dimensions);
+        .then((dimensions) => this.set('_dimensions.previous', dimensions));
 
       this._getImageDimensions(this.activeImage.nextImage)
-        .then((dimensions) => this._dimensions.next = dimensions);
+        .then((dimensions) => this.set('_dimensions.next', dimensions));
     }
   }
 
