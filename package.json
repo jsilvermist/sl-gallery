@@ -31,16 +31,16 @@
   "homepage": "https://github.com/jsilvermist/sl-gallery#readme",
   "dependencies": {
     "@jsilvermist/fullscreen-api": "^0.2.0",
-    "@polymer/app-layout": "^3.0.0-pre.19",
-    "@polymer/iron-iconset-svg": "^3.0.0-pre.19",
-    "@polymer/iron-image": "^3.0.0-pre.19",
-    "@polymer/paper-icon-button": "^3.0.0-pre.19",
-    "@polymer/paper-spinner": "^3.0.0-pre.19",
-    "@polymer/polymer": "^3.0.0"
+    "@polymer/app-layout": "^3.0.1",
+    "@polymer/iron-iconset-svg": "^3.0.1",
+    "@polymer/iron-image": "^3.0.1",
+    "@polymer/paper-icon-button": "^3.0.1",
+    "@polymer/paper-spinner": "^3.0.1",
+    "@polymer/polymer": "^3.0.5"
   },
   "devDependencies": {
-    "@polymer/iron-demo-helpers": "^3.0.0-pre.19",
-    "@webcomponents/webcomponentsjs": "^2.0.0",
+    "@polymer/iron-demo-helpers": "^3.0.2",
+    "@webcomponents/webcomponentsjs": "^2.1.3",
     "wct-browser-legacy": "^1.0.1"
   },
   "resolutions": {
