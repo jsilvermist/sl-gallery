@@ -26,18 +26,19 @@ export const ZoomMixin = (superclass) => class extends superclass {
 
     this._zoom = {
       scale: 1,
+      oldScale: 1,
+      factor: 0.25,
+      max: 9,
       coordinates: {
-        center: {
-          x: null,
-          y: null,
-        },
         previous: {
           x: null,
           y: null,
         },
+        position: {
+          x: 0,
+          y: 0,
+        },
       },
-      max: 5,
-      min: 1,
     };
   }
 
@@ -55,17 +56,21 @@ export const ZoomMixin = (superclass) => class extends superclass {
   }
 
   _handleWheelZoom(event) {
-    if (event.deltaY < 0 && this.activeImage.loaded) {
-      // Handle scroll up
-      this._zoomIn(0.25, event.clientX, event.clientY);
-    } else {
-      // Handle scroll down
-      this._zoomOut(0.25);
+    event.preventDefault();
+
+    const delta = Math.max(Math.min(event.deltaY, 1), -1);
+
+    // [TODO]: Consider moving factor usage to adjustZoom
+    const zoomFactor = -delta * this._zoom.factor * this._zoom.scale;
+
+    if (this.activeImage && this.activeImage.loaded) {
+      this._adjustZoom(zoomFactor, event.clientX, event.clientY);
     }
   }
 
   _handleZoomClickStart(event) {
     if (this.zoomActive) {
+      // [TODO]: Debug grabbing cursor not being applied while mouse down
       this.zoomClicked = true;
       const { previous } = this._zoom.coordinates;
       if (event.touches && event.touches[0]) {
@@ -82,7 +87,7 @@ export const ZoomMixin = (superclass) => class extends superclass {
   _handleZoomClickMove(event) {
     if (this.zoomActive) {
       event.preventDefault();
-      const { center, previous } = this._zoom.coordinates;
+      const { previous, position } = this._zoom.coordinates;
       let x, y;
       if (event.touches && event.touches[0]) {
         x = event.touches[0].clientX;
@@ -93,16 +98,19 @@ export const ZoomMixin = (superclass) => class extends superclass {
         y = event.clientY;
       }
 
-      const xDiff = previous.x - x;
-      const yDiff = previous.y - y;
+      const xDiff = x - previous.x;
+      const yDiff = y - previous.y;
 
       previous.x = x;
       previous.y = y;
 
-      const newX = center.x + (xDiff * 2 / this._zoom.scale);
-      const newY = center.y + (yDiff * 2 / this._zoom.scale);
+      // [TODO]: Fix for use with the new zoom coordinate system
+      // this._updateZoomPosition(xDiff, yDiff);
 
-      this._updateZoomOrigin(newX, newY);
+      position.x += xDiff;
+      position.y += yDiff;
+
+      this._updateZoomTransform();
     }
   }
 
@@ -112,109 +120,131 @@ export const ZoomMixin = (superclass) => class extends superclass {
     }
   }
 
-  _recenterZoom(x, y) {
-    const { center } = this._zoom.coordinates;
-    let newX, newY;
-    if (this._zoom.scale > 1) {
-      newX = center.x + ((x - center.x) / this._zoom.scale);
-      newY = center.y + ((y - center.y) / this._zoom.scale);
+  _updateZoomPosition(xDiff = 0, yDiff = 0) {
+    const { position } = this._zoom.coordinates;
+    const { current } = this._dimensions;
+
+    const newOffsetX = position.x + xDiff;
+    const newOffsetY = position.y + yDiff;
+
+    // Bound edges of image to center of screen
+    const boundingWidth = (current.width / 2) * this._zoom.scale;
+    const boundingHeight = (current.height / 2) * this._zoom.scale;
+
+    // Handle bounding for X axis
+    if (newOffsetX > boundingWidth) {
+      position.x = boundingWidth;
+    } else if (newOffsetX < -boundingWidth) {
+      position.x = -boundingWidth;
     } else {
-      newX = x;
-      newY = y;
+      position.x = newOffsetX;
     }
 
-    this._updateZoomOrigin(newX, newY);
-  }
-
-  _updateZoomOrigin(x, y) {
-    const { center } = this._zoom.coordinates;
-    const dimensions = this._dimensions.current;
-
-    // Handle max zoom for X axis
-    if (x > dimensions.width + dimensions.offsetWidth) {
-      center.x = dimensions.width + dimensions.offsetWidth;
-    } else if (x < dimensions.offsetWidth) {
-      center.x = dimensions.offsetWidth;
+    // Handle bounding for Y axis
+    if (newOffsetY > boundingHeight) {
+      position.y = boundingHeight;
+    } else if (newOffsetY < -boundingHeight) {
+      position.y = -boundingHeight;
     } else {
-      center.x = x;
+      position.y = newOffsetY;
     }
 
-    // Handle max zoom for Y axis
-    if (y > dimensions.height + dimensions.offsetHeight) {
-      center.y = dimensions.height + dimensions.offsetHeight;
-    } else if (y < dimensions.offsetHeight) {
-      center.y = dimensions.offsetHeight;
+    // Update transform after bounding coordinates
+    this._updateZoomTransform();
+  }
+
+  _updateZoomTransform() {
+    const { scale } = this._zoom;
+    const { position } = this._zoom.coordinates;
+    const { screen } = this._dimensions;
+
+    // Adjust coordinates based on a center origin
+  	const x = position.x + screen.width * (scale - 1) / 2;
+    const y = position.y + screen.height * (scale - 1) / 2;
+
+    this.$.image.style.transform =
+      `translate(${x}px, ${y}px) scale(${this._zoom.scale})`;
+  }
+
+  _recenterZoom(clientX, clientY) {
+    const { scale, oldScale } = this._zoom;
+    const { position } = this._zoom.coordinates;
+    const { screen } = this._dimensions;
+    const zoomTarget = { x: null, y: null };
+
+    // Calculate target on image to zoom at based on scale
+    zoomTarget.x = (clientX - position.x) / oldScale;
+    zoomTarget.y = (clientY - position.y) / oldScale;
+
+    // Calculate X and Y positions based on new scale
+    position.x = -zoomTarget.x * scale + clientX;
+    position.y = -zoomTarget.y * scale + clientY;
+
+    // Ensure the image stays in its container area when zooming out
+    // [TODO]: Contain image to (currentSize + screen/2)
+    // [TODO]: Stop treating offsets as part of image
+    if (position.x > 0) {
+      position.x = 0;
+    }
+    if (position.x + screen.width * scale < screen.width) {
+      position.x = -screen.width * (scale - 1);
+    }
+    if (position.y > 0) {
+      position.y = 0;
+    }
+    if (position.y + screen.height * scale < screen.height) {
+      position.y = -screen.height * (scale - 1);
+    }
+
+    this._updateZoomTransform();
+  }
+
+  _adjustZoom(change, x, y) {
+    // Increase zoom scale up to the max value
+    this._zoom.oldScale = this._zoom.scale;
+    this._zoom.scale =
+      Math.max(Math.min(this._zoom.scale + change, this._zoom.max), 1);
+
+    // Zoom is active when zoomed in
+    this.zoomActive = true;
+
+    // Enable transitions, clear timeout to prevent jitter
+    clearTimeout(this._zoom.transitionTimeout);
+    this.$.image.style.transition = `transform ${this.transitionTime}ms`;
+
+    // Update transform and position as necessary
+    if (this._zoom.scale !== 1) {
+      if (!(x && y)) {
+        x = this._dimensions.screen.width / 2;
+        y = this._dimensions.screen.height / 2;
+      }
+      this._recenterZoom(x, y);
     } else {
-      center.y = y;
+      this._resetZoom();
     }
 
-    this.$.image.style.transformOrigin = `${center.x}px ${center.y}px`;
-  }
-
-  _centerZoomOrigin() {
-    const { center } = this._zoom.coordinates;
-
-    if (!center.x || !center.y) {
-      const dimensions = this._dimensions.current;
-      center.x = (dimensions.width / 2) + dimensions.offsetWidth;
-      center.y = (dimensions.height / 2) + dimensions.offsetHeight;
-    }
-
-    this.$.image.style.transformOrigin = `${center.x}px ${center.y}px`;
-  }
-
-  _zoomIn(increase, x, y) {
-    if (this._zoom.scale < this._zoom.max) {
-      if (this._zoom.scale + increase < this._zoom.max) {
-        this._zoom.scale = this._zoom.scale + increase;
-      } else {
-        this._zoom.scale = this._zoom.max;
-      }
-
-      // Update zoom related properties
-      this.zoomActive = true;
-      if (x && y) {
-        this._recenterZoom(x, y);
-      } else {
-        this._centerZoomOrigin();
-      }
-      this.$.image.style.transform = `scale(${this._zoom.scale})`;
-    }
-  }
-
-  _zoomOut(decrease) {
-    if (this._zoom.scale > this._zoom.min) {
-      if (this._zoom.scale - decrease > this._zoom.min) {
-        this._zoom.scale = this._zoom.scale - decrease;
-      } else {
-        this._zoom.scale = this._zoom.min;
-      }
-
-      // Update zoom or reset
-      if (this._zoom.scale !== this._zoom.min) {
-        this.$.image.style.transform = `scale(${this._zoom.scale})`;
-      } else {
-        this._resetZoom();
-      }
-    }
-  }
-
-  _handleZoomIn() {
-    this._zoomIn(0.50);
-  }
-
-  _handleZoomOut() {
-    this._zoomOut(0.50);
+    // Disable transitions when transition completes
+    this._zoom.transitionTimeout = setTimeout(() => {
+      this.$.image.style.transition = '';
+    }, this.transitionTime);
   }
 
   _resetZoom() {
     this.zoomActive = false;
     this.zoomClicked = false;
-    this._zoom.scale = this._zoom.min;
-    this._zoom.coordinates.center.x = null;
-    this._zoom.coordinates.center.y = null;
+    this._zoom.scale = 1;
+    this._zoom.oldScale = 1;
+    this._zoom.coordinates.position.x = 0;
+    this._zoom.coordinates.position.y = 0;
     this.$.image.style.transform = '';
-    this.$.image.style.transformOrigin = '';
+  }
+
+  _handleZoomIn() {
+    this._adjustZoom(this._zoom.factor * this._zoom.scale);
+  }
+
+  _handleZoomOut() {
+    this._adjustZoom(-this._zoom.factor * this._zoom.scale);
   }
 
 }

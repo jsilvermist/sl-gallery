@@ -83,7 +83,6 @@ export const TouchMixin = (superclass) => class extends superclass {
         } else {
           // Last image bounceback effect (scale)
           this.$.image.style.transform = `scale(${scaleInt}.${scaleDec})`;
-          this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
         }
         this.$.previousImage.style.transform = '';
       } else {
@@ -95,7 +94,6 @@ export const TouchMixin = (superclass) => class extends superclass {
         } else {
           // First image bounceback effect (scale)
           this.$.image.style.transform = `scale(${scaleInt}.${scaleDec})`;
-          this.$.image.style.transformOrigin = `${start.x}px ${start.y}px`;
         }
         this.$.nextImage.style.transform = '';
       }
@@ -116,8 +114,7 @@ export const TouchMixin = (superclass) => class extends superclass {
     const xDiff = start.x - move.x;
 
     // Get viewport width
-    const vw = Math.max(document.documentElement.clientWidth,
-      window.innerWidth || 0);
+    const vw = this._dimensions.screen.width;
 
     // Differentiate swipes from drags
     const minSwipeDistance = Math.min(Math.max(vw / 6, 50), 250);

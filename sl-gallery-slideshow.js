@@ -65,6 +65,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
           top: 0;
           width: 100vw;
           height: 100%;
+          transform-origin: center;
           will-change: transform;
         }
 
@@ -385,12 +386,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   }
 
   _transitionToNewImage({dimensions, index, newImage, negative}) {
-    let transitionTime = 0;
-
     if (dimensions && this._dimensions.current) {
-      // Set transitionTime when transitioning
-      transitionTime = this.transitionTime;
-
       // Get offsets for image transitions
       const offsets = new Object();
       offsets.new = dimensions.width + dimensions.offsetWidth;
@@ -418,7 +414,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
 
       // Update hash and change image to new image
       window.location.hash = `/${this.gallery.prefix}/${index}`;
-    }, transitionTime);
+    }, this.transitionTime);
   }
 
   _updateSlideshowDimensions() {
@@ -428,6 +424,12 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
         window.innerWidth || 0);
       const vh = Math.max(document.documentElement.clientHeight,
         window.innerHeight || 0);
+
+      // Save screen size to slideshow
+      this.set('_dimensions.screen', {
+        width: vw,
+        height: vh,
+      });
 
       // Ensure slideshow resizes with address bar on mobile
       this.style.height = `${vh}px`;
