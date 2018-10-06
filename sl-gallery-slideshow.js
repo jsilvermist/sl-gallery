@@ -485,14 +485,12 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   _getBaseImageSize(image) {
     return new Promise((resolve, reject) => {
       if (!image.width || !image.height) {
-        const waitForDimensions = (event) => {
-          image.removeEventListener('dimensions-changed', waitForDimensions);
+        image.addEventListener('dimensions-changed', () => {
           resolve({
             width: image.width,
             height: image.height,
           });
-        };
-        image.addEventListener('dimensions-changed', waitForDimensions);
+        }, { once: true });
       } else {
         resolve({
           width: image.width,
