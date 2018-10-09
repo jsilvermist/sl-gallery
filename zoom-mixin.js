@@ -163,7 +163,7 @@ export const ZoomMixin = (superclass) => class extends superclass {
     const y = position.y + screen.height * (scale - 1) / 2;
 
     this.$.image.style.transform =
-      `translate(${x}px, ${y}px) scale(${this._zoom.scale})`;
+      `translate(${x}px, ${y}px) scale(${scale})`;
   }
 
   _recenterZoom(clientX, clientY) {

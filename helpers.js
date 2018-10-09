@@ -27,6 +27,7 @@ export function getContainImageSize(imageWidth, imageHeight, areaWidth, areaHeig
   return { width: imageWidth, height: imageHeight };
 }
 
+// [TODO]: Unused, use or remove
 export function zeroPad(num, size) {
   const str = num.toString();
   const zeros = size - str.length;

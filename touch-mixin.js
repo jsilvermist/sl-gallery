@@ -1,5 +1,3 @@
-import { zeroPad } from './helpers.js';
-
 /**
  * Slideshow touch and swipe handling
  * @polymer
@@ -68,9 +66,10 @@ export const TouchMixin = (superclass) => class extends superclass {
     const xDiff = start.x - move.x;
     const yDiff = start.y - move.y;
 
-    // First/Last image bounceback effects (scale)
-    const scaleInt = 1 + Math.floor(Math.abs(xDiff) / 1000);
-    const scaleDec = zeroPad(Math.abs(xDiff).toFixed().toString().slice(-3), 3);
+    // First/Last image bounceback effects (translateX)
+    // For visualization google: `plot of (1-e^(-x/5))*5 and x`
+    const bbFactor = this._dimensions.screen.width / 4;
+    const bbDist = (1 - Math.exp(-Math.abs(xDiff) / bbFactor)) * bbFactor;
 
     // Movement is larger along the X axis than Y axis
     if (Math.abs(xDiff) > Math.abs(yDiff)) {
@@ -81,8 +80,8 @@ export const TouchMixin = (superclass) => class extends superclass {
           this.$.nextImage.style.transform = `translateX(${-xDiff}px)`;
           this.$.image.style.transform = `translateX(${-xDiff}px)`;
         } else {
-          // Last image bounceback effect (scale)
-          this.$.image.style.transform = `scale(${scaleInt}.${scaleDec})`;
+          // Last image bounceback effect
+          this.$.image.style.transform = `translateX(${-bbDist}px)`;
         }
         this.$.previousImage.style.transform = '';
       } else {
@@ -92,8 +91,8 @@ export const TouchMixin = (superclass) => class extends superclass {
           this.$.previousImage.style.transform = `translateX(${-xDiff}px)`;
           this.$.image.style.transform = `translateX(${-xDiff}px)`;
         } else {
-          // First image bounceback effect (scale)
-          this.$.image.style.transform = `scale(${scaleInt}.${scaleDec})`;
+          // First image bounceback effect
+          this.$.image.style.transform = `translateX(${bbDist}px)`;
         }
         this.$.nextImage.style.transform = '';
       }

@@ -435,8 +435,10 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
       this.style.height = `${vh}px`;
 
       // [TODO]: Is this a good idea?
+      // [TODO]: Fix for new zoom system, preferably recenter image transform
+      // based on old -> new screen size
       if (this.zoomActive) {
-        this._updateZoomOrigin(vw / 2, vh / 2);
+        this._updateZoomTransform(vw / 2, vh / 2);
       }
     }
   }
