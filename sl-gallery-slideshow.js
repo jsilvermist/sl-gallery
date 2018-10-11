@@ -236,9 +236,17 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   }
 
   _handleResize() {
-    // Update dimensions on resize
-    this._updateSlideshowDimensions();
-    this._updateImageDimensions();
+    // Throttle handling resize based on animation frames
+    if (!this._resizing) {
+      this._resizing = true;
+      window.requestAnimationFrame(() => {
+        this._resizing = false;
+
+        // Update dimensions on resize
+        this._updateSlideshowDimensions();
+        this._updateImageDimensions();
+      });
+    }
   }
 
   _activeImageChanged(activeImage) {
