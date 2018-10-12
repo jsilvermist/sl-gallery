@@ -513,7 +513,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   _dimensionsPreviousChanged(previous) {
     if (previous) {
       // offsetWidth previous image just off the edge of the screen
-      const offsetWidth = previous.width + previous.offsetWidth;
+      const offsetWidth = Math.ceil(previous.width + previous.offsetWidth);
       this.$.previousImage.style.left = `${-offsetWidth}px`;
     } else {
       this.$.previousImage.style.left = '-100vw';
@@ -523,7 +523,7 @@ class SLGallerySlideshow extends TouchMixin(ZoomMixin(PolymerElement)) {
   _dimensionsNextChanged(next) {
     if (next) {
       // offsetWidth next image just off the edge of the screen
-      const offsetWidth = next.width + next.offsetWidth;
+      const offsetWidth = Math.ceil(next.width + next.offsetWidth);
       this.$.nextImage.style.right = `${-offsetWidth}px`;
     } else {
       this.$.nextImage.style.right = '-100vw';
