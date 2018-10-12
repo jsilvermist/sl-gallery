@@ -104,9 +104,6 @@ export const ZoomMixin = (superclass) => class extends superclass {
       previous.x = x;
       previous.y = y;
 
-      // [TODO]: Fix for use with the new zoom coordinate system
-      // this._updateZoomPosition(xDiff, yDiff);
-
       position.x += xDiff;
       position.y += yDiff;
 
@@ -120,43 +117,26 @@ export const ZoomMixin = (superclass) => class extends superclass {
     }
   }
 
-  _updateZoomPosition(xDiff = 0, yDiff = 0) {
-    const { position } = this._zoom.coordinates;
-    const { current } = this._dimensions;
-
-    const newOffsetX = position.x + xDiff;
-    const newOffsetY = position.y + yDiff;
-
-    // Bound edges of image to center of screen
-    const boundingWidth = (current.width / 2) * this._zoom.scale;
-    const boundingHeight = (current.height / 2) * this._zoom.scale;
-
-    // Handle bounding for X axis
-    if (newOffsetX > boundingWidth) {
-      position.x = boundingWidth;
-    } else if (newOffsetX < -boundingWidth) {
-      position.x = -boundingWidth;
-    } else {
-      position.x = newOffsetX;
-    }
-
-    // Handle bounding for Y axis
-    if (newOffsetY > boundingHeight) {
-      position.y = boundingHeight;
-    } else if (newOffsetY < -boundingHeight) {
-      position.y = -boundingHeight;
-    } else {
-      position.y = newOffsetY;
-    }
-
-    // Update transform after bounding coordinates
-    this._updateZoomTransform();
-  }
-
   _updateZoomTransform() {
     const { scale } = this._zoom;
     const { position } = this._zoom.coordinates;
-    const { screen } = this._dimensions;
+    const { screen, current } = this._dimensions;
+
+    // Calculate offset scale to prevent zoom on offset
+    const extraWidth = current.offsetWidth * (scale - 1);
+    const extraHeight = current.offsetHeight * (scale - 1);
+
+    // Ensure the image stays in its container area when zooming out
+    if (position.x > -extraWidth) {
+      position.x = -extraWidth;
+    } else if (position.x + screen.width * scale - extraWidth < screen.width) {
+      position.x = -screen.width * (scale - 1) + extraWidth;
+    }
+    if (position.y > -extraHeight) {
+      position.y = -extraHeight;
+    } else if (position.y + screen.height * scale - extraHeight < screen.height) {
+      position.y = -screen.height * (scale - 1) + extraHeight;
+    }
 
     // Adjust coordinates based on a center origin
   	const x = position.x + screen.width * (scale - 1) / 2;
@@ -169,32 +149,28 @@ export const ZoomMixin = (superclass) => class extends superclass {
   _recenterZoom(clientX, clientY) {
     const { scale, oldScale } = this._zoom;
     const { position } = this._zoom.coordinates;
-    const { screen } = this._dimensions;
+    const { current } = this._dimensions;
     const zoomTarget = { x: null, y: null };
 
     // Calculate target on image to zoom at based on scale
     zoomTarget.x = (clientX - position.x) / oldScale;
     zoomTarget.y = (clientY - position.y) / oldScale;
 
+    // Prevent zoomTarget from targetting offsets
+    if (zoomTarget.x < current.offsetWidth) {
+      zoomTarget.x = current.offsetWidth;
+    } else if (zoomTarget.x > current.width + current.offsetWidth) {
+      zoomTarget.x = current.width + current.offsetWidth;
+    }
+    if (zoomTarget.y < current.offsetHeight) {
+      zoomTarget.y = current.offsetHeight;
+    } else if (zoomTarget.y > current.width + current.offsetHeight) {
+      zoomTarget.y = current.width + current.offsetHeight;
+    }
+
     // Calculate X and Y positions based on new scale
     position.x = -zoomTarget.x * scale + clientX;
     position.y = -zoomTarget.y * scale + clientY;
-
-    // Ensure the image stays in its container area when zooming out
-    // [TODO]: Contain image to (currentSize + screen/2)
-    // [TODO]: Stop treating offsets as part of image
-    if (position.x > 0) {
-      position.x = 0;
-    }
-    if (position.x + screen.width * scale < screen.width) {
-      position.x = -screen.width * (scale - 1);
-    }
-    if (position.y > 0) {
-      position.y = 0;
-    }
-    if (position.y + screen.height * scale < screen.height) {
-      position.y = -screen.height * (scale - 1);
-    }
 
     this._updateZoomTransform();
   }
@@ -214,7 +190,7 @@ export const ZoomMixin = (superclass) => class extends superclass {
 
     // Update transform and position as necessary
     if (this._zoom.scale !== 1) {
-      if (!(x && y)) {
+      if (x === undefined || y === undefined) {
         x = this._dimensions.screen.width / 2;
         y = this._dimensions.screen.height / 2;
       }
