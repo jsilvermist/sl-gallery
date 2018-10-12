@@ -70,7 +70,6 @@ export const ZoomMixin = (superclass) => class extends superclass {
 
   _handleZoomClickStart(event) {
     if (this.zoomActive) {
-      // [TODO]: Debug grabbing cursor not being applied while mouse down
       this.zoomClicked = true;
       const { previous } = this._zoom.coordinates;
       if (event.touches && event.touches[0]) {
