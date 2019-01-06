@@ -126,7 +126,10 @@ class SLGallery extends PolymerElement {
 
     // Create observer to watch for new nodes added from light dom
     this._observer = new FlattenedNodesObserver(this, (info) => {
-      this._images = [...info.target.children];
+      //this could be exposed as property
+      const blackList = ['dom-repeat', 'dom-if'];
+      let allowedNodes = [...info.target.children].filter( elem => blackList.indexOf(elem.nodeName.toLowerCase()) === -1);
+      this._images = allowedNodes;
     });
   }
 

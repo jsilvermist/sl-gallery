@@ -54,6 +54,26 @@
     </div>
 
     <div class="vertical-section-container centered">
+      <h3>Basic sl-gallery with dom-repeat</h3>
+      <demo-snippet>
+        <template>
+          <sl-gallery prefix="dom-repeat">
+            <dom-repeat items="[227,155,349,46]">
+              <template>
+                <sl-gallery-image
+                        src="https://unsplash.it/800/500/?image=[[item]]"
+                        small="https://unsplash.it/400/250/?image=[[item]]"
+                        title="Example Title [[item]]"
+                        caption="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Necessitatibus tempora ea eius placeat. Sed culpa numquam voluptatibus possimus, eaque vel!">
+                </sl-gallery-image>
+              </template>
+            </dom-repeat>
+          </sl-gallery>
+        </template>
+      </demo-snippet>
+    </div>
+
+    <div class="vertical-section-container centered">
       <h3>Multiple galleries on the same page use different prefixes (default: i)</h3>
       <demo-snippet>
         <template>
