@@ -66,6 +66,10 @@ class SLGallerySlideshowOverlay extends PolymerElement {
           --app-toolbar-font-size: 14px;
         }
 
+        app-toolbar.footer [main-title] {
+          padding: 8px 0;
+        }
+
         :host([toolbar-visible]) app-toolbar.header {
           top: 0;
           visibility: visible;
